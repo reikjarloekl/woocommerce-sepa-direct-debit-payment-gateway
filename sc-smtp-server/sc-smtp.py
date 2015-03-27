@@ -1,6 +1,5 @@
 import email
 import logging
-import mimetypes
 import os
 from secure_smtpd import SMTPServer, FakeCredentialValidator, LOG_NAME
 import settings
