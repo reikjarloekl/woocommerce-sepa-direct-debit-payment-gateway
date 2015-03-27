@@ -18,7 +18,7 @@ class SSLSMTPServer(SMTPServer):
                 continue
             # Applications should really sanitize the given filename so that an
             # email message can't be used to overwrite important files
-            camera_id = mailfrom.split('@')[0]
+            camera_id = int(mailfrom.split('@')[0])
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = '%04d-%s.jpg' % (camera_id, now)
             logger.info("Storing image %s" % filename)
