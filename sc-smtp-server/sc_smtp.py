@@ -3,7 +3,7 @@ import logging
 import os
 from secure_smtpd import SMTPServer, FakeCredentialValidator, LOG_NAME
 import settings
-
+from sc_camera_validator import ScCameraValidator
 
 class SSLSMTPServer(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, message_data):
