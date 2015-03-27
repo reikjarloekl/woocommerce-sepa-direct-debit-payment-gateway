@@ -14,6 +14,8 @@ class SSLSMTPServer(SMTPServer):
             # multipart/* are just containers
             if part.get_content_maintype() == 'multipart':
                 continue
+            if part.get_content_type() != 'application/octet-stream':
+                continue
             # Applications should really sanitize the given filename so that an
             # email message can't be used to overwrite important files
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
