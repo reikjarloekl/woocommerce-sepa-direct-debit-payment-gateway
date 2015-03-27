@@ -1,9 +1,27 @@
+import email
 import logging
+import mimetypes
+import os
 from secure_smtpd import SMTPServer, FakeCredentialValidator, LOG_NAME
+import settings
+
 
 class SSLSMTPServer(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, message_data):
-        print(message_data)
+        msg = email.message_from_string(message_data)
+        logger.info("Receiving message from %s" % mailfrom)
+        for part in msg.walk():
+            # multipart/* are just containers
+            if part.get_content_maintype() == 'multipart':
+                continue
+            # Applications should really sanitize the given filename so that an
+            # email message can't be used to overwrite important files
+            now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            filename = '%s-%s.jpg' % (mailfrom, now)
+            logger.info("Storing image %s" % filename)
+            fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
+            fp.write(part.get_payload(decode=True))
+            fp.close()
 
 logger = logging.getLogger( LOG_NAME )
 logger.setLevel(logging.INFO)
@@ -13,7 +31,7 @@ server = SSLSMTPServer(
     None,
     require_authentication=True,
     ssl=False,
-    credential_validator=FakeCredentialValidator(),
+    credential_validator=ScCameraValidator(),
     maximum_execution_time=1.0
     )
 
