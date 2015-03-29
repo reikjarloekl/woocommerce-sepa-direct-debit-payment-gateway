@@ -7,6 +7,6 @@ Here's my message!
 
 server = smtplib.SMTP('localhost', port=1025)
 server.set_debuglevel(1)
-server.login('bcoe', 'foobar')
+server.login('1@simplecam.de', 'Nkfm8201/ltNdjdaytrg')
 server.sendmail('foo@localhost', ['bar@localhost'], msg)
 server.quit()
