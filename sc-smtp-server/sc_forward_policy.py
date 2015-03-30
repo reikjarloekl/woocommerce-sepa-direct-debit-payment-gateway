@@ -53,7 +53,7 @@ class ScForward(QueuePolicy):
         msg_alternative.attach(msg_text)
         msg.attach(img)
         new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
-        new_env.parse(msg)
+        new_env.parse(msg.to_string())
         return [new_env]
 
 if __name__ == "__main__":
