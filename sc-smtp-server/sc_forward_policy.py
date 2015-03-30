@@ -64,4 +64,4 @@ if __name__ == "__main__":
     env.timestamp = time.time()
     pol = ScForward()
     ne = pol.apply(env)
-    print re.sub('\r\n', "<newline>", "".join(ne.flatten()))
+    print re.sub('\r\n', "<newline>", "".join(ne[0].flatten()))
