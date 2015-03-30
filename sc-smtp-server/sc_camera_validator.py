@@ -4,6 +4,7 @@ import hmac
 import re
 from slimta.edge.smtp import SmtpValidators
 from slimta.smtp.auth import CredentialsInvalidError, Auth
+from slimta.smtp.auth.standard import Login
 import settings
 
 __author__ = 'Joern'
@@ -34,6 +35,10 @@ class ScAuth(Auth):
         if pattern.match(username):
             return self.get_password(username), username
         raise CredentialsInvalidError()
+
+    def get_available_mechanisms(self, connection_secure=False):
+        return [Login]
+
 
 class ScCameraValidator(object):
     def validate(self, username, password):
