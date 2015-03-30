@@ -30,14 +30,14 @@ class ScForward(QueuePolicy):
             return part
 
     def apply(self, envelope):
-        part = self.get_image(envelope.sender, envelope.message)
+        part = self.get_image(envelope.sender, "".join(envelope.flatten()))
         msg = MIMEMultipart()
         msg.attach(MIMEText("Mail von SimpleCam."))
         msg.attach(part)
         print msg.as_string()
-        # env = new Envelope(settings.SENDER_ADDRESS, recipients, )
+        env = Envelope(settings.SENDER_ADDRESS, ["jb@kaspa.net"], None, msg)
 
-env = Envelope()
+env = Envelope("1@simplecam.de")
 with open("test/mail.txt", "rb") as fil:
     env.parse(fil.read())
 pol = ScForward()
