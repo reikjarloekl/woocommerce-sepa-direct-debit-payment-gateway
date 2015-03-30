@@ -1,14 +1,14 @@
 __author__ = 'Joern'
 
 # HTML content of mail sent to recipients
-MAIL_CONTENT =
-"""
+MAIL_CONTENT = """
 <img src="cid:{}">
 <br/>
 Ein Foto von Ihrer SimpleCam.
 <br/>
 <a href="http://www.simplecam.de">http://www.simplecam.de</a>
 """
+
 # sender from which mails forwarding images shall originate
 SENDER_ADDRESS = 'SimpleCam <noreply@simplecam.de>'
 
