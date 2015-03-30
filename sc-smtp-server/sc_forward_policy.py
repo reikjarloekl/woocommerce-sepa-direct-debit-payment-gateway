@@ -5,7 +5,7 @@ from os.path import basename
 from slimta.envelope import Envelope
 from slimta.policy import QueuePolicy
 import settings
-from email import MIMEMultipart, email, MIMEText
+from email import MIMEMultipart, email, MIMEText, mime
 
 __author__ = 'Joern'
 
@@ -32,7 +32,7 @@ class ScForward(QueuePolicy):
     def apply(self, envelope):
         part = self.get_image(envelope.sender, envelope.message)
         msg = MIMEMultipart()
-        msg.attach(MIMEText("Mail von SimpleCam."))
+        msg.attach(mime.text.MIMEText("Mail von SimpleCam."))
         msg.attach(part)
         print msg.as_string()
         # env = new Envelope(settings.SENDER_ADDRESS, recipients, )
