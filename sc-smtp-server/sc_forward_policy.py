@@ -42,6 +42,7 @@ class ScForward(QueuePolicy):
             envelope.recipients = []
             return
         msg = MIMEMultipart()
+        msg.preamble = "This is a multi-part message in MIME format."
         ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
