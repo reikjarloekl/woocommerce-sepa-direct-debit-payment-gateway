@@ -44,17 +44,17 @@ class ScForward(QueuePolicy):
         msg = MIMEMultipart()
         ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         msg['Subject'] = 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts)
-        msg['From'] = settings.SENDER_ADDRESS
-        msg['To'] = 'jb@kaspa.net'
+        #msg['From'] = settings.SENDER_ADDRESS
+        #msg['To'] = 'jb@kaspa.net'
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
         msg_alternative.attach(MIMEText("Ein Foto von Ihrer SimpleCam.", 'plain'))
         msg_text = MIMEText('<img src="cid:{}"><br/>Ein Foto von Ihrer SimpleCam.'.format(ATTACHMENT_NAME), 'html')
         msg_alternative.attach(msg_text)
         msg.attach(img)
-        new_env = Envelope()
+        new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
         new_env.parse(msg)
-        return new_env
+        return [new_env]
 
 if __name__ == "__main__":
     env = Envelope("1@simplecam.de")
