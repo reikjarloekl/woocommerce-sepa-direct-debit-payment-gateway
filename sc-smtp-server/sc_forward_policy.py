@@ -1,0 +1,44 @@
+import datetime
+from email.mime.application import MIMEApplication
+import os
+from os.path import basename
+from slimta.envelope import Envelope
+from slimta.policy import QueuePolicy
+import settings
+from email import MIMEMultipart, email, MIMEText
+
+__author__ = 'Joern'
+
+
+class ScForward(QueuePolicy):
+    def get_image(self, sender, message_data):
+        msg = email.message_from_string(message_data)
+        for part in msg.walk():
+            # multipart/* are just containers
+            if part.get_content_maintype() == 'multipart':
+                continue
+            if part.get_content_type() != 'application/octet-stream':
+                continue
+            # Applications should really sanitize the given filename so that an
+            # email message can't be used to overwrite important files
+            camera_id = int(sender.split('@')[0])
+            now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            filename = '%04d-%s.jpg' % (camera_id, now)
+            #fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
+            #fp.write(part.get_payload(decode=True))
+            #fp.close()
+            return part
+
+    def apply(self, envelope):
+        part = self.get_image(envelope.sender, envelope.message)
+        msg = MIMEMultipart()
+        msg.attach(MIMEText("Mail von SimpleCam."))
+        msg.attach(part)
+        print msg.as_string()
+        # env = new Envelope(settings.SENDER_ADDRESS, recipients, )
+
+env = Envelope()
+with open("test/mail.txt", "rb") as fil:
+    env.parse(fil.read())
+pol = ScForward()
+pol.apply(env)
