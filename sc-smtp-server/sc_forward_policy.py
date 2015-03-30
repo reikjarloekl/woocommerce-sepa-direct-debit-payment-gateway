@@ -1,4 +1,5 @@
 import datetime
+import time
 import os
 from os.path import basename
 from slimta.envelope import Envelope
@@ -60,6 +61,6 @@ env = Envelope("1@simplecam.de")
 with open("test/mail.txt", "rb") as fil:
     env.parse(fil.read())
 
-env.timestamp = datetime.time.time()
+env.timestamp = time.time()
 pol = ScForward()
 pol.apply(env)
