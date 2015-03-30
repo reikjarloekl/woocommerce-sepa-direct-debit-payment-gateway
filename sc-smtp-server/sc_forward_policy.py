@@ -7,6 +7,8 @@ import settings
 from email import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+
 __author__ = 'Joern'
 
 
@@ -33,7 +35,7 @@ class ScForward(QueuePolicy):
         part = self.get_image(envelope.sender, "".join(envelope.flatten()))
         msg = MIMEMultipart()
         msg.attach(MIMEText("Mail von SimpleCam."))
-        msg.attach(part)
+        msg.attach(MIMEImage(part.get_payload(decode=True)))
         print msg.as_string()
         env = Envelope(settings.SENDER_ADDRESS, ["jb@kaspa.net"], None, msg)
 
