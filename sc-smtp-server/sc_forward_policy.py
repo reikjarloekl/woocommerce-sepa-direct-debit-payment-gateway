@@ -1,7 +1,6 @@
 import datetime
 import time
 import os
-from os.path import basename
 from slimta.envelope import Envelope
 from slimta.policy import QueuePolicy
 import settings
@@ -29,9 +28,9 @@ class ScForward(QueuePolicy):
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = '%04d-%s.jpg' % (camera_id, now)
             img_data = part.get_payload(decode=True)
-            #fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
-            #fp.write(img_data)
-            #fp.close()
+            fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
+            fp.write(img_data)
+            fp.close()
 
             img = MIMEImage(img_data, 'jpeg')
             img.add_header('Content-ID', ATTACHMENT_NAME)
@@ -55,12 +54,14 @@ class ScForward(QueuePolicy):
         msg.attach(img)
         new_env = Envelope()
         new_env.parse(msg)
-        print "".join(new_env.flatten())
+        return new_env
 
-env = Envelope("1@simplecam.de")
-with open("test/mail.txt", "rb") as fil:
-    env.parse(fil.read())
+if __name__ == "__main__":
+    env = Envelope("1@simplecam.de")
+    with open("test/mail.txt", "rb") as fil:
+        env.parse(fil.read())
 
-env.timestamp = time.time()
-pol = ScForward()
-pol.apply(env)
+    env.timestamp = time.time()
+    pol = ScForward()
+    ne = pol.apply(env)
+    print "".join(ne.flatten())
