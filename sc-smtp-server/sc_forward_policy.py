@@ -11,6 +11,7 @@ from email.mime.image import MIMEImage
 
 __author__ = 'Joern'
 
+ATTACHMENT_NAME = "simplecam.jpg"
 
 class ScForward(QueuePolicy):
     def get_image(self, sender, message_data):
@@ -29,13 +30,16 @@ class ScForward(QueuePolicy):
             #fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
             #fp.write(part.get_payload(decode=True))
             #fp.close()
+
+            img = MIMEImage(part.get_payload(decode=True), 'jpeg')
+            img.add_header('Content-ID', ATTACHMENT_NAME)
             return part
 
     def apply(self, envelope):
-        part = self.get_image(envelope.sender, "".join(envelope.flatten()))
+        img = self.get_image(envelope.sender, "".join(envelope.flatten()))
         msg = MIMEMultipart()
         msg.attach(MIMEText("Mail von SimpleCam."))
-        msg.attach(MIMEImage(part.get_payload(decode=True)))
+        msg.attach(img)
         print msg.as_string()
         env = Envelope(settings.SENDER_ADDRESS, ["jb@kaspa.net"], None, msg)
 
