@@ -60,6 +60,6 @@ env = Envelope("1@simplecam.de")
 with open("test/mail.txt", "rb") as fil:
     env.parse(fil.read())
 
-env.timestamp = datetime.datetime.now()
+env.timestamp = datetime.time.time()
 pol = ScForward()
 pol.apply(env)
