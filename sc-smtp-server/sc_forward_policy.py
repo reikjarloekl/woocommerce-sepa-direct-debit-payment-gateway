@@ -28,9 +28,8 @@ class ScForward(QueuePolicy):
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = '%04d-%s.jpg' % (camera_id, now)
             img_data = part.get_payload(decode=True)
-            fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
-            fp.write(img_data)
-            fp.close()
+            with open(os.path.join(settings.IMAGE_DIR, filename), 'wb') as fp:
+                fp.write(img_data)
 
             img = MIMEImage(img_data, 'jpeg')
             img.add_header('Content-ID', ATTACHMENT_NAME)
@@ -65,4 +64,4 @@ if __name__ == "__main__":
     env.timestamp = time.time()
     pol = ScForward()
     ne = pol.apply(env)
-    print "".join(ne.flatten())
+    print re.sub('\r\n', "<newline>", "".join(ne.flatten()))
