@@ -47,7 +47,7 @@ class ScForward(QueuePolicy):
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
         msg_alternative.attach(MIMEText("Ein Foto von Ihrer SimpleCam.", 'plain'))
-        msg_text = MIMEText('<img src="cid:{}"><br/>Ein Foto von Ihrer SimpleCam.'.format(ATTACHMENT_NAME), 'html')
+        msg_text = MIMEText(settings.MAIL_CONTENT.format(ATTACHMENT_NAME), 'html')
         msg_alternative.attach(msg_text)
         msg.attach(img)
         new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
@@ -55,6 +55,7 @@ class ScForward(QueuePolicy):
         new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts))
         new_env.prepend_header('From', settings.SENDER_ADDRESS)
         new_env.prepend_header('To', 'jb@kaspa.net')
+        new_env.message = re.sub('\r?\n', "\r\n", new_env.message)
         return [new_env]
 
 if __name__ == "__main__":
