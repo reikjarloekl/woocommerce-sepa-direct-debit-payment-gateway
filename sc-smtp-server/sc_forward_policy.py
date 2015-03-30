@@ -27,21 +27,34 @@ class ScForward(QueuePolicy):
             camera_id = int(sender.split('@')[0])
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = '%04d-%s.jpg' % (camera_id, now)
+            img_data = part.get_payload(decode=True)
             #fp = open(os.path.join(settings.IMAGE_DIR, filename), 'wb')
-            #fp.write(part.get_payload(decode=True))
+            #fp.write(img_data)
             #fp.close()
 
-            img = MIMEImage(part.get_payload(decode=True), 'jpeg')
+            img = MIMEImage(img_data, 'jpeg')
             img.add_header('Content-ID', ATTACHMENT_NAME)
             return part
 
     def apply(self, envelope):
         img = self.get_image(envelope.sender, "".join(envelope.flatten()))
+        if img is None:
+            envelope.recipients = []
+            return
         msg = MIMEMultipart()
-        msg.attach(MIMEText("Mail von SimpleCam."))
+        ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
+        msg['Subject'] = 'SimpleCam {}: {}'.format("#Hohe Kanzel", )
+        msg['From'] = settings.SENDER_ADDRESS
+        msg['To'] = 'jb@kaspa.net'
+        msg_alternative = MIMEMultipart('alternative')
+        msg.attach(msg_alternative)
+        msg_alternative.attach(MIMEText("Ein Foto von Ihrer SimpleCam.", 'plain'))
+        msg_text = MIMEText('<img src="cid:{}"><br/>Ein Foto von Ihrer SimpleCam.'.format(ATTACHMENT_NAME), 'html')
+        msg_alternative.attach(msg_text)
         msg.attach(img)
-        print msg.as_string()
-        env = Envelope(settings.SENDER_ADDRESS, ["jb@kaspa.net"], None, msg)
+        new_env = Envelope()
+        new_env.parse(msg)
+        print "".join(new_env.flatten())
 
 env = Envelope("1@simplecam.de")
 with open("test/mail.txt", "rb") as fil:
