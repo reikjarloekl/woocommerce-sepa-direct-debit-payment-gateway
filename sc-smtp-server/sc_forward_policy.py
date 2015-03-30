@@ -53,7 +53,7 @@ class ScForward(QueuePolicy):
         new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
         new_env.parse(msg)
         new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts))
-        new_env.prepend_header('From', settings.SENDER_ADDRESS)
+        new_env.prepend_header('From', '"{}" <{}>'.format(settings.SENDER_NAME, settings.SENDER_ADDRESS))
         new_env.prepend_header('To', 'jb@kaspa.net')
         new_env.message = re.sub('\r?\n', "\r\n", new_env.message)
         return [new_env]

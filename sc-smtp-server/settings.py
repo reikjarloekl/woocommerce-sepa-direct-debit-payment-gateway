@@ -10,7 +10,8 @@ Ein Foto von Ihrer SimpleCam.
 """
 
 # sender from which mails forwarding images shall originate
-SENDER_ADDRESS = 'SimpleCam <noreply@simplecam.de>'
+SENDER_ADDRESS = 'noreply@simplecam.de'
+SENDER_NAME = 'SimpleCam'
 
 # Secret key used to calculate the password from the username
 SECRET_KEY = 'To2PqIc8jd2X9MN0pnu1Ug2mcFhm3vs05qHQo1k8zArWU18Cg5vR3sUOw6sv'
