@@ -44,7 +44,7 @@ class ScForward(QueuePolicy):
             return
         msg = MIMEMultipart()
         ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
-        msg['Subject'] = 'SimpleCam {}: {}'.format("#Hohe Kanzel", )
+        msg['Subject'] = 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts)
         msg['From'] = settings.SENDER_ADDRESS
         msg['To'] = 'jb@kaspa.net'
         msg_alternative = MIMEMultipart('alternative')
