@@ -35,7 +35,7 @@ class ScForward(QueuePolicy):
 
             img = MIMEImage(img_data, 'jpeg')
             img.add_header('Content-ID', ATTACHMENT_NAME)
-            return part
+            return img
 
     def apply(self, envelope):
         img = self.get_image(envelope.sender, "".join(envelope.flatten()))
