@@ -2,6 +2,7 @@ from gevent.event import Event
 from slimta.relay.smtp.mx import MxSmtpRelay
 from sc_camera_validator import ScValidators, ScAuth
 from sc_forward_policy import ScForward
+import logging
 
 __author__ = 'Joern'
 
@@ -22,6 +23,8 @@ def start_slimta():
                     command_timeout=20.0,
                     data_timeout=30.0, auth_class=ScAuth)
     edge.start()
+
+logging.basicConfig()
 
 start_slimta()
 
