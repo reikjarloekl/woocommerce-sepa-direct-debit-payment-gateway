@@ -59,5 +59,7 @@ class ScForward(QueuePolicy):
 env = Envelope("1@simplecam.de")
 with open("test/mail.txt", "rb") as fil:
     env.parse(fil.read())
+
+env.timestamp = datetime.datetime.now()
 pol = ScForward()
 pol.apply(env)
