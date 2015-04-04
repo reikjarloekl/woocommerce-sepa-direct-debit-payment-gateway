@@ -57,12 +57,14 @@ class ScForward(QueuePolicy):
             envelope.recipients = []
             return
         msg = self.get_message(img, filename)
+
         ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
-        new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
+        new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net', 'joern@bungartz.name'])
         new_env.parse(msg)
         new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts))
         new_env.prepend_header('From', '"{}" <{}>'.format(settings.SENDER_NAME, settings.SENDER_ADDRESS))
         new_env.prepend_header('To', 'jb@kaspa.net')
+        new_env.prepend_header('To', 'joern@bungartz.name')
         new_env.message = re.sub('\r?\n', "\r\n", new_env.message)
         return [new_env]
 

@@ -1,4 +1,5 @@
 from gevent.event import Event
+from slimta.policy.split import RecipientSplit
 from slimta.relay.smtp.mx import MxSmtpRelay
 from sc_camera_validator import ScValidators, ScAuth
 from sc_forward_policy import ScForward
@@ -18,6 +19,7 @@ def start_slimta():
     queue.start()
 
     queue.add_policy(ScForward())
+    queue.add_policy(RecipientSplit)
     edge = SmtpEdge(('', 1025), queue,
                     validator_class=ScValidators,
                     command_timeout=20.0,
