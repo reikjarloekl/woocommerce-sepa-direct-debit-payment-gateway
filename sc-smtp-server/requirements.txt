@@ -1,3 +1,5 @@
-slimta
+PyYAML==3.11
 argparse==1.3.0
-secure-smtpd==3.0.0
+python-slimta==1.1.0
+python-slimta-lookup==0.1.0
+slimta==0.4.4

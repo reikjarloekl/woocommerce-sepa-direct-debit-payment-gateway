@@ -1,13 +1,23 @@
+import os
+
 __author__ = 'Joern'
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # HTML content of mail sent to recipients
 MAIL_CONTENT = """
 <img src="cid:{}">
 <br/>
-Ein Foto von Ihrer SimpleCam.
+<img src="cid:{}">
 <br/>
 <a href="http://www.simplecam.de">http://www.simplecam.de</a>
 """
+
+# Alternative text for email in case client cannot display html.
+MAIL_CONTENT_ALTERNATIVE = 'Ein Foto von Ihrer SimpleCam.'
+
+# The SimpleCam-Logo to be used in mails sent. Has to be a JPEG.
+SC_LOGO_FILE = os.path.join(BASE_DIR, 'sc_logo.jpg')
 
 # sender from which mails forwarding images shall originate
 SENDER_ADDRESS = 'noreply@simplecam.de'
