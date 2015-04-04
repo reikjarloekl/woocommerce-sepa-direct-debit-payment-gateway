@@ -42,7 +42,7 @@ class ScForward(QueuePolicy):
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
         msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
-        msg_text = MIMEText(settings.MAIL_CONTENT.format(LOGO_NAME, img_filename), 'html')
+        msg_text = MIMEText(settings.MAIL_CONTENT.format(img_filename, LOGO_NAME), 'html')
         msg_alternative.attach(msg_text)
         msg.attach(img)
         logo_data = open(settings.SC_LOGO_FILE, 'rb').read()
