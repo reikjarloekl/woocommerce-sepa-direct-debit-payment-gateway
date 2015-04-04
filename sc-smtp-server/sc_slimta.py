@@ -21,7 +21,6 @@ def start_slimta():
     queue.start()
 
     queue.add_policy(ScForward())
-    queue.add_policy(AddMessageIdHeader)
     queue.add_policy(RecipientSplit())
     edge = SmtpEdge(('', 1025), queue,
                     validator_class=ScValidators,
