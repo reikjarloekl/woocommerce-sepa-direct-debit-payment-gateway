@@ -2,7 +2,7 @@ import os
 
 __author__ = 'Joern'
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(__file__)
 
 # HTML content of mail sent to recipients
 MAIL_CONTENT = """
