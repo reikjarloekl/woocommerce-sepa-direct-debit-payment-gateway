@@ -52,6 +52,8 @@ class ScForward(QueuePolicy):
         return msg
 
     def apply(self, envelope):
+        if envelope.sender is None:
+            return
         img, filename = self.get_image(envelope.sender, "".join(envelope.flatten()))
         if img is None:
             envelope.recipients = []
