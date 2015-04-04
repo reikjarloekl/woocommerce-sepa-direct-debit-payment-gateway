@@ -47,7 +47,7 @@ class ScForward(QueuePolicy):
         msg.attach(img)
         logo_data = open(settings.SC_LOGO_FILE, 'rb').read()
         logo = MIMEImage(logo_data, 'jpeg')
-        img.add_header('Content-ID', LOGO_NAME)
+        logo.add_header('Content-ID', LOGO_NAME)
         msg.attach(logo)
         return msg
 
