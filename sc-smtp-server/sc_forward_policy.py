@@ -36,10 +36,9 @@ class ScForward(QueuePolicy):
             img.add_header('Content-ID', filename)
             return img, filename
 
-    def get_message(self, img, img_filename, ts):
+    def get_message(self, img, img_filename):
         msg = MIMEMultipart()
         msg.preamble = "This is a multi-part message in MIME format."
-        ts = datetime.datetime.fromtimestamp(ts).strftime('%d.%m.%Y %H:%M:%S')
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
         msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
@@ -57,7 +56,8 @@ class ScForward(QueuePolicy):
         if img is None:
             envelope.recipients = []
             return
-        msg = self.get_message(img, filename, envelope.timestamp)
+        msg = self.get_message(img, filename)
+        ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         new_env = Envelope(settings.SENDER_ADDRESS, ['jb@kaspa.net'])
         new_env.parse(msg)
         new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts))
