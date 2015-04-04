@@ -28,3 +28,8 @@ SECRET_KEY = 'To2PqIc8jd2X9MN0pnu1Ug2mcFhm3vs05qHQo1k8zArWU18Cg5vR3sUOw6sv'
 
 # Directory to save the received images to.
 IMAGE_DIR = '/var/opt/simplecam/images'
+
+# SMTP Forward Information
+SMTP_HOST = 'wp228.webpack.hosteurope.de'
+SMTP_USER = 'wp1089149-info'
+SMTP_PASS = 'wS94piCr4jwFntUkKrB0'

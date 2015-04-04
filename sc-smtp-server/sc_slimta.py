@@ -1,9 +1,11 @@
 from gevent.event import Event
 from slimta.policy.split import RecipientSplit
-from slimta.relay.smtp.mx import MxSmtpRelay
+from slimta.policy.headers import AddMessageIdHeader
+from slimta.relay.smtp.static import StaticSmtpRelay
 from sc_camera_validator import ScValidators, ScAuth
 from sc_forward_policy import ScForward
 import logging
+import settings
 
 __author__ = 'Joern'
 
@@ -12,13 +14,14 @@ def start_slimta():
     from slimta.queue import Queue
     from slimta.edge.smtp import SmtpEdge
 
-    relay = MxSmtpRelay()
+    relay = StaticSmtpRelay(settings.SMTP_HOST, credentials=[settings.SMTP_USER, settings.SMTP_PASS])
 
     storage = DictStorage()
     queue = Queue(storage, relay)
     queue.start()
 
     queue.add_policy(ScForward())
+    queue.add_policy(AddMessageIdHeader)
     queue.add_policy(RecipientSplit())
     edge = SmtpEdge(('', 1025), queue,
                     validator_class=ScValidators,
