@@ -60,7 +60,7 @@ class ScForward(QueuePolicy):
             return
 
         camera_id = int(envelope.sender.split('@')[0])
-        caminfo = ScCameraInformation(1)
+        caminfo = ScCameraInformation(camera_id)
         img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
         if img is None:
             envelope.recipients = []
