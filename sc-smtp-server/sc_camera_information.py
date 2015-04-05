@@ -27,7 +27,7 @@ class ScCameraInformation:
     def get_name(self):
         query = self._session.query(self._camera.name)\
             .filter(self._camera.id == self._camera_id)
-        return query.first()
+        return query.first()[0]
 
 if __name__ == "__main__":
     caminfo = ScCameraInformation(1)
