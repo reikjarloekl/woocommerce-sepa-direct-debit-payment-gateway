@@ -1,6 +1,6 @@
 from gevent.event import Event
 from slimta.policy.split import RecipientSplit
-from slimta.policy.headers import AddMessageIdHeader
+from slimta import system
 from slimta.relay.smtp.static import StaticSmtpRelay
 from sc_camera_validator import ScValidators, ScAuth
 from sc_forward_policy import ScForward
@@ -32,7 +32,4 @@ logging.basicConfig()
 
 start_slimta()
 
-try:
-    Event().wait()
-except KeyboardInterrupt:
-    print
+system.daemonize()
