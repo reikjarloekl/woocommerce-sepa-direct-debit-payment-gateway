@@ -41,18 +41,18 @@ class ScForward(QueuePolicy):
 
     @staticmethod
     def get_message(img, img_filename):
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('alternative')
         msg.preamble = "This is a multi-part message in MIME format."
-        msg_alternative = MIMEMultipart('alternative')
-        msg.attach(msg_alternative)
-        msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
+        msg_related = MIMEMultipart('related')
+        msg.attach(msg_related)
+        msg.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
         msg_text = MIMEText(settings.MAIL_CONTENT.format(img_filename, LOGO_NAME), 'html')
-        msg_alternative.attach(msg_text)
-        msg.attach(img)
+        msg_related.attach(msg_text)
+        msg_related.attach(img)
         logo_data = open(settings.SC_LOGO_FILE, 'rb').read()
         logo = MIMEImage(logo_data, 'jpeg')
         logo.add_header('Content-ID', LOGO_NAME)
-        msg.attach(logo)
+        msg_related.attach(logo)
         return msg
 
     def apply(self, envelope):
