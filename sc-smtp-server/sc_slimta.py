@@ -22,7 +22,7 @@ def start_slimta():
 
     queue.add_policy(ScForward())
     queue.add_policy(RecipientSplit())
-    edge = SmtpEdge(('', 1025), queue,
+    edge = SmtpEdge(('', settings.SMTP_PORT), queue,
                     validator_class=ScValidators,
                     command_timeout=20.0,
                     data_timeout=30.0, auth_class=ScAuth)
