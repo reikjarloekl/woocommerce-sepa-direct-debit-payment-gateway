@@ -17,7 +17,16 @@ LOGO_NAME = 'logo.jpg'
 
 class ScForward(QueuePolicy):
     @staticmethod
-    def get_image(camera_id, message_data):
+    def get_content_id(name):
+        return '{}@simplecam.de'.format(name)
+
+    def get_mime_image(self, img_data, filename):
+        img = MIMEImage(img_data, 'jpeg')
+        img.add_header('Content-ID', '<{}>'.format(self.get_content_id(filename)))
+        img.add_header('Content-Disposition', 'inline; filename="{}"'.format(filename))
+        return img
+
+    def get_image(self, camera_id, message_data):
         msg = email.message_from_string(message_data)
         for part in msg.walk():
             # multipart/* are just containers
@@ -34,13 +43,10 @@ class ScForward(QueuePolicy):
             with open(os.path.join(settings.IMAGE_DIR, filename), 'wb') as fp:
                 fp.write(img_data)
 
-            img = MIMEImage(img_data, 'jpeg')
-            img.add_header('Content-ID', filename)
-            img.add_header('Content-Disposition', 'inline')
+            img = self.get_mime_image(img_data, filename)
             return img, filename
 
-    @staticmethod
-    def get_message(img, img_filename):
+    def get_message(self, img, img_filename):
         msg = MIMEMultipart()
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
@@ -48,12 +54,12 @@ class ScForward(QueuePolicy):
         msg_related = MIMEMultipart('related')
         msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
         msg_alternative.attach(msg_related)
-        msg_html = MIMEText(settings.MAIL_CONTENT.format(img_filename, LOGO_NAME), 'html')
+        msg_html = MIMEText(settings.MAIL_CONTENT.format(self.get_content_id(img_filename),
+                                                         self.get_content_id(LOGO_NAME)), 'html')
         msg_related.attach(msg_html)
         msg_related.attach(img)
         logo_data = open(settings.SC_LOGO_FILE, 'rb').read()
-        logo = MIMEImage(logo_data, 'jpeg')
-        logo.add_header('Content-ID', LOGO_NAME)
+        logo = self.get_mime_image(logo_data, LOGO_NAME)
         msg_related.attach(logo)
         return msg
 
