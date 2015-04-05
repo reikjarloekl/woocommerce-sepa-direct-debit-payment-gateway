@@ -4,6 +4,7 @@ import time
 import os
 from slimta.envelope import Envelope
 from slimta.policy import QueuePolicy
+from sc_camera_information import ScCameraInformation
 import settings
 from email import email
 from email.mime.multipart import MIMEMultipart
@@ -15,7 +16,8 @@ __author__ = 'Joern'
 LOGO_NAME = 'logo.jpg'
 
 class ScForward(QueuePolicy):
-    def get_image(self, sender, message_data):
+    @staticmethod
+    def get_image(camera_id, message_data):
         msg = email.message_from_string(message_data)
         for part in msg.walk():
             # multipart/* are just containers
@@ -25,7 +27,7 @@ class ScForward(QueuePolicy):
                 continue
             # Applications should really sanitize the given filename so that an
             # email message can't be used to overwrite important files
-            camera_id = int(sender.split('@')[0])
+
             now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             filename = '%04d-%s.jpg' % (camera_id, now)
             img_data = part.get_payload(decode=True)
@@ -34,9 +36,11 @@ class ScForward(QueuePolicy):
 
             img = MIMEImage(img_data, 'jpeg')
             img.add_header('Content-ID', filename)
+            img.add_header('Content-Disposition', 'inline')
             return img, filename
 
-    def get_message(self, img, img_filename):
+    @staticmethod
+    def get_message(img, img_filename):
         msg = MIMEMultipart()
         msg.preamble = "This is a multi-part message in MIME format."
         msg_alternative = MIMEMultipart('alternative')
@@ -54,18 +58,21 @@ class ScForward(QueuePolicy):
     def apply(self, envelope):
         if envelope.sender == '':
             return
-        img, filename = self.get_image(envelope.sender, "".join(envelope.flatten()))
+
+        camera_id = int(envelope.sender.split('@')[0])
+        caminfo = ScCameraInformation(1)
+        img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
         if img is None:
             envelope.recipients = []
             return
-        msg = self.get_message(img, filename)
 
-        recipients = ['jb@kaspa.net', 'joern@bungartz.name']
+        msg = self.get_message(img, filename)
+        recipients = caminfo.get_forward_addresses()
 
         ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         new_env = Envelope(settings.SENDER_ADDRESS, recipients)
         new_env.parse(msg)
-        new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format("#Hohe Kanzel", ts))
+        new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format(caminfo.get_name(), ts))
         new_env.prepend_header('To', ', '.join(recipients))
         new_env.prepend_header('From', '"{}" <{}>'.format(settings.SENDER_NAME, settings.SENDER_ADDRESS))
         new_env.message = re.sub('\r?\n', "\r\n", new_env.message)

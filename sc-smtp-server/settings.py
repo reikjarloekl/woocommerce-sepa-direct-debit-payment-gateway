@@ -4,6 +4,9 @@ __author__ = 'Joern'
 
 BASE_DIR = os.path.dirname(__file__)
 
+# Database connection string
+DATABASE_URL = 'sqlite:///' + os.path.join(os.path.dirname(BASE_DIR), 'sc_frontend/db.sqlite3')
+
 # HTML content of mail sent to recipients
 MAIL_CONTENT = """
 <img src="cid:{}">
