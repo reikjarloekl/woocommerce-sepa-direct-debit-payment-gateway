@@ -43,6 +43,7 @@ class ScForward(QueuePolicy):
     def get_message(img, img_filename):
         msg = MIMEMultipart()
         msg_alternative = MIMEMultipart('alternative')
+        msg.attach(msg_alternative)
         msg.preamble = "This is a multi-part message in MIME format."
         msg_related = MIMEMultipart('related')
         msg_alternative.attach(msg_related)
