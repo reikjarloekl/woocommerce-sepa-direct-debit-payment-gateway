@@ -5,7 +5,7 @@ __author__ = 'Joern'
 BASE_DIR = os.path.dirname(__file__)
 
 # SMTP Port to listen on
-SMTP_PORT = 25
+SMTP_PORT = 1025
 
 # Database connection string
 DATABASE_URL = 'sqlite:///' + os.path.join(os.path.dirname(BASE_DIR), 'sc_frontend/db.sqlite3')
