@@ -33,3 +33,8 @@ logging.basicConfig()
 start_slimta()
 
 system.daemonize()
+
+try:
+    Event().wait()
+except KeyboardInterrupt:
+    print
