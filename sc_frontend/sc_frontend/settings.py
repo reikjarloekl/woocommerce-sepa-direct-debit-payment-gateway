@@ -18,13 +18,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '+xk8345@33(p)mx)me9vab$x98(y$-ok89ab+1wa--n=5zj1_^'
+JWT_AUTH_KEY = 'R[=F):PwK@T%.[Sm%dsp2jralpUK^2;vcOmzl_QZ*#o-H:-q4bkj?&Qyp(1[$ul-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = ['app.simplecam.de']
+ALLOWED_HOSTS = ['app.simplecam.de', '127.0.0.1']
 
 
 # Application definition
@@ -45,8 +46,14 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'sc_frontend.jwt_authentication.jwt_authentication_middleware.JwtAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'sc_frontend.jwt_authentication.jwt_authentication_backend.JwtBackend',
 )
 
 ROOT_URLCONF = 'sc_frontend.urls'
@@ -67,9 +74,9 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'de-de'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'UTC+2'
 
 USE_I18N = True
 
