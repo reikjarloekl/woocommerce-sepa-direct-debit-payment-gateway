@@ -87,7 +87,7 @@ class ScForward(QueuePolicy):
                                                                                      settings.FORWARD_UNKNOWN_EMAILS_TO))
             envelope.recipients = [settings.FORWARD_UNKNOWN_EMAILS_TO]
             return
-
+        logger.info('Processing image from camera #{} ({})'.format(camera_id, filename))
         msg = self.get_message(img, filename)
         recipients = caminfo.get_forward_addresses()
 
