@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 import time
 import os
@@ -14,6 +15,7 @@ from email.mime.image import MIMEImage
 __author__ = 'Joern'
 
 LOGO_NAME = 'logo.jpg'
+logger = logging.getLogger(__name__)
 
 class ScForward(QueuePolicy):
     @staticmethod
@@ -41,6 +43,7 @@ class ScForward(QueuePolicy):
             filename = '%04d-%s.jpg' % (camera_id, now)
             img_data = part.get_payload(decode=True)
             with open(os.path.join(settings.IMAGE_DIR, filename), 'wb') as fp:
+                logger.debug('Writing attached image to {}'.format(fp.name))
                 fp.write(img_data)
 
             img = self.get_mime_image(img_data, filename)
@@ -64,13 +67,21 @@ class ScForward(QueuePolicy):
         return msg
 
     def apply(self, envelope):
+        """
+        :type envelope: :class:`slimta.envelope.Envelope`
+        """
         if envelope.sender == '':
+            logger.debug('{}: Skipping envelope with empty sender (probably bounced email).'.format(id(envelope)))
             return
+        logger.debug('{}: Processing envelope from {} to {}'.format(id(envelope), envelope.sender, envelope.recipients))
 
         camera_id = int(envelope.sender.split('@')[0])
         caminfo = ScCameraInformation(camera_id)
+        logger.debug('{}: Retrieved camera information from db: {}'.format(id(envelope), caminfo))
         img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
         if img is None:
+            logger.debug('{}: No image found in email. Forwarding mail to {}'.format(id(envelope), settings.FORWARD_UNKNOWN_EMAILS_TO))
+            logger.debug('{}: content: {}'.format(id(envelope), envelope.flatten()))
             envelope.recipients = [settings.FORWARD_UNKNOWN_EMAILS_TO]
             return
 
@@ -84,6 +95,7 @@ class ScForward(QueuePolicy):
         new_env.prepend_header('To', ', '.join(recipients))
         new_env.prepend_header('From', '"{}" <{}>'.format(settings.SENDER_NAME, settings.SENDER_ADDRESS))
         new_env.message = re.sub('\r?\n', "\r\n", new_env.message)
+        logger.debug('{}: Finished processing envelope. Queuing new envelope {}.'.format(id(envelope), id(new_env)))
         return [new_env]
 
 if __name__ == "__main__":

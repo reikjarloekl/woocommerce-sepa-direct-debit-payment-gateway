@@ -1,14 +1,19 @@
+import logging
 import os
 
 __author__ = 'Joern'
 
 BASE_DIR = os.path.dirname(__file__)
 
+# Logging level and target
+LOG_LEVEL = logging.DEBUG
+LOG_FILE = '/var/log/sc-smtp/sc-smtp.log'
+
 # SMTP Port to listen on
 SMTP_PORT = 1025
 
 # Database connection string
-DATABASE_URL = 'sqlite:///' + os.path.join(os.path.dirname(BASE_DIR), 'sc_frontend/db.sqlite3')
+DATABASE_URL = 'sqlite:////home/joern/sc-smtp-server/db.sqlite3'
 
 # HTML content of mail sent to recipients
 MAIL_CONTENT = """
@@ -42,3 +47,8 @@ IMAGE_DIR = '/var/opt/simplecam/images'
 SMTP_HOST = 'wp228.webpack.hosteurope.de'
 SMTP_USER = 'wp1089149-info'
 SMTP_PASS = 'wS94piCr4jwFntUkKrB0'
+
+try:
+    from local_settings import *
+except ImportError as e:
+    pass

@@ -29,6 +29,10 @@ class ScCameraInformation:
             .filter(self._camera.id == self._camera_id)
         return query.first()[0]
 
+    def __repr__(self):
+        template = "Camera #{}, Name: {}, Forward addresses: {}"
+        return template.format(self._camera_id, self.get_name(), self.get_forward_addresses())
+
 if __name__ == "__main__":
     caminfo = ScCameraInformation(1)
     print caminfo.get_forward_addresses()
