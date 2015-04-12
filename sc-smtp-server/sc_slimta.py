@@ -28,7 +28,8 @@ def start_slimta():
                     data_timeout=30.0, auth_class=ScAuth)
     edge.start()
 
-logging.basicConfig(filename=settings.LOG_FILE, level=settings.LOG_LEVEL)
+log_format = '%(asctime)s-%(levelname)s-%(module)s-%(funcName)s: %(message)s'
+logging.basicConfig(filename=settings.LOG_FILE, level=settings.LOG_LEVEL, format=log_format)
 
 start_slimta()
 
