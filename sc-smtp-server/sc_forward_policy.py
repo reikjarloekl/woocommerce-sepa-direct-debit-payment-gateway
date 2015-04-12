@@ -78,10 +78,13 @@ class ScForward(QueuePolicy):
         camera_id = int(envelope.sender.split('@')[0])
         caminfo = ScCameraInformation(camera_id)
         logger.debug('{}: Retrieved camera information from db: {}'.format(id(envelope), caminfo))
-        img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
+        try:
+            img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
+        except TypeError:
+            img = None
         if img is None:
-            logger.debug('{}: No image found in email. Forwarding mail to {}'.format(id(envelope), settings.FORWARD_UNKNOWN_EMAILS_TO))
-            logger.debug('{}: content: {}'.format(id(envelope), envelope.flatten()))
+            logger.debug('{}: No image found in email. Forwarding mail to {}'.format(id(envelope),
+                                                                                     settings.FORWARD_UNKNOWN_EMAILS_TO))
             envelope.recipients = [settings.FORWARD_UNKNOWN_EMAILS_TO]
             return
 
