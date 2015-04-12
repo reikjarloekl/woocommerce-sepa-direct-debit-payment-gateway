@@ -71,7 +71,7 @@ class ScForward(QueuePolicy):
         caminfo = ScCameraInformation(camera_id)
         img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
         if img is None:
-            envelope.recipients = []
+            envelope.recipients = [settings.FORWARD_UNKNOWN_EMAILS_TO]
             return
 
         msg = self.get_message(img, filename)

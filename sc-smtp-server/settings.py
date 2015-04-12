@@ -25,8 +25,11 @@ MAIL_CONTENT_ALTERNATIVE = 'Ein Foto von Ihrer SimpleCam.'
 # The SimpleCam-Logo to be used in mails sent. Has to be a JPEG.
 SC_LOGO_FILE = os.path.join(BASE_DIR, 'sc_logo.jpg')
 
+# Address to which unprocessable mails (i.e., ones not containing an image) are sent
+FORWARD_UNKNOWN_EMAILS_TO = 'info@simplecam.de'
+
 # sender from which mails forwarding images shall originate
-SENDER_ADDRESS = 'noreply@simplecam.de'
+SENDER_ADDRESS = 'info@simplecam.de'
 SENDER_NAME = 'SimpleCam'
 
 # Secret key used to calculate the password from the username
