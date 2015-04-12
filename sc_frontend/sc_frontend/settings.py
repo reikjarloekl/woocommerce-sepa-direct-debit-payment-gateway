@@ -21,9 +21,9 @@ SECRET_KEY = '+xk8345@33(p)mx)me9vab$x98(y$-ok89ab+1wa--n=5zj1_^'
 JWT_AUTH_KEY = 'R[=F):PwK@T%.[Sm%dsp2jralpUK^2;vcOmzl_QZ*#o-H:-q4bkj?&Qyp(1[$ul-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['app.simplecam.de', '127.0.0.1']
 
@@ -66,8 +66,12 @@ WSGI_APPLICATION = 'sc_frontend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'simplecam',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'USER': 'sc_front',
+        'PASSWD': 'DuLcBrq01NIveYWYTw8D',
     }
 }
 
