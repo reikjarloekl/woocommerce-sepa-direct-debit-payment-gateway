@@ -25,7 +25,7 @@ def start_slimta():
     edge = SmtpEdge(('', settings.SMTP_PORT), queue,
                     validator_class=ScValidators,
                     command_timeout=20.0,
-                    data_timeout=30.0, auth_class=ScAuth)
+                    data_timeout=300.0, auth_class=ScAuth)
     edge.start()
 
 log_format = '%(asctime)s - %(levelname)s - %(thread)d:%(module)s.%(funcName)s: %(message)s'
