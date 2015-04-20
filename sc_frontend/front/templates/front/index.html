@@ -20,6 +20,9 @@
                     Ihre eigene Email-Adresse können Sie nicht löschen.
                 </p>
                 <ul class="list-unstyled">
+                    <li>
+                        {{ user.get_full_name }} ({{ user.email }})
+                    </li>
                     {% for address in camera.email_addresses.all %}
                         <li>
                             {{ address.name }} ({{ address.address }})
