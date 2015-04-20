@@ -1,0 +1,81 @@
+<mockup version="1.0" skin="sketch" fontFace="Balsamiq Sans" measuredW="1049" measuredH="682" mockupW="805" mockupH="665">
+  <controls>
+    <control controlID="1" controlTypeID="com.balsamiq.mockups::BrowserWindow" x="244" y="17" w="805" h="665" measuredW="450" measuredH="400" zOrder="0" locked="false" isInGroup="-1">
+      <controlProperties>
+        <borderStyle>square</borderStyle>
+        <text>SimpleCam%0Ahttp%3A//www.simplecam.de</text>
+      </controlProperties>
+    </control>
+    <control controlID="2" controlTypeID="com.balsamiq.mockups::Label" x="338" y="115" w="317" h="-1" measuredW="267" measuredH="28" zOrder="1" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>20</size>
+        <text>SimpleCam%20%2314%3A%20Hohe%20Kanzel</text>
+      </controlProperties>
+    </control>
+    <control controlID="3" controlTypeID="com.balsamiq.mockups::HRule" x="338" y="143" w="616" h="-1" measuredW="100" measuredH="10" zOrder="2" locked="false" isInGroup="-1"/>
+    <control controlID="4" controlTypeID="com.balsamiq.mockups::Icon" x="615" y="117" w="-1" h="-1" measuredW="24" measuredH="24" zOrder="3" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>PencilIcon%7Csmall</icon>
+      </controlProperties>
+    </control>
+    <control controlID="6" controlTypeID="com.balsamiq.mockups::Paragraph" x="517" y="179" w="437" h="110" measuredW="200" measuredH="80" zOrder="4" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Bilder%20von%20dieser%20SimpleCam%20werden%20an%20folgende%20Empf%E4nger%20geschickt.%20Um%20einen%20Empf%E4nger%20zu%20l%F6schen%2C%20klicken%20sie%20auf%20das%20Kreuz%20neben%20dem%20entsprechenden%20Eintrag.%20Ihre%20eigene%20Email-Adresse%20k%F6nnen%20Sie%20nicht%20l%F6schen.%0A%20%0AFrank%20%28frank@seidel-stahl.de%29%0AGeorg%20%28georg.mueller@gmx.de%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="8" controlTypeID="com.balsamiq.mockups::Icon" x="706" y="271" w="-1" h="-1" measuredW="16" measuredH="16" zOrder="5" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>CircledXIcon%7Cxsmall</icon>
+      </controlProperties>
+    </control>
+    <control controlID="9" controlTypeID="com.balsamiq.mockups::Button" x="517" y="304" w="-1" h="-1" measuredW="214" measuredH="27" zOrder="6" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Weiteren%20Empf%E4nger%20hinzuf%FCgen</text>
+      </controlProperties>
+    </control>
+    <control controlID="10" controlTypeID="com.balsamiq.mockups::Label" x="338" y="345" w="235" h="-1" measuredW="229" measuredH="28" zOrder="7" locked="false" isInGroup="-1">
+      <controlProperties>
+        <size>20</size>
+        <text>SimpleCam%20%2315%3A%20Paradies</text>
+      </controlProperties>
+    </control>
+    <control controlID="11" controlTypeID="com.balsamiq.mockups::HRule" x="338" y="373" w="616" h="-1" measuredW="100" measuredH="10" zOrder="8" locked="false" isInGroup="-1"/>
+    <control controlID="12" controlTypeID="com.balsamiq.mockups::Icon" x="573" y="345" w="-1" h="-1" measuredW="24" measuredH="24" zOrder="9" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>PencilIcon%7Csmall</icon>
+      </controlProperties>
+    </control>
+    <control controlID="17" controlTypeID="com.balsamiq.mockups::Label" x="338" y="158" w="-1" h="-1" measuredW="74" measuredH="21" zOrder="10" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Letztes%20Bild%3A</text>
+      </controlProperties>
+    </control>
+    <control controlID="18" controlTypeID="com.balsamiq.mockups::Image" x="338" y="179" w="166" h="125" measuredW="800" measuredH="600" zOrder="11" locked="false" isInGroup="-1">
+      <controlProperties>
+        <src>./assets/0001-20150414-035820.jpg</src>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="23" controlTypeID="com.balsamiq.mockups::Label" x="338" y="388" w="-1" h="-1" measuredW="74" measuredH="21" zOrder="12" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Letztes%20Bild%3A</text>
+      </controlProperties>
+    </control>
+    <control controlID="24" controlTypeID="com.balsamiq.mockups::Image" x="338" y="409" w="166" h="125" measuredW="800" measuredH="600" zOrder="13" locked="false" isInGroup="-1">
+      <controlProperties>
+        <src>./assets/0001-20150414-035820.jpg</src>
+        <text/>
+      </controlProperties>
+    </control>
+    <control controlID="25" controlTypeID="com.balsamiq.mockups::Paragraph" x="517" y="409" w="437" h="103" measuredW="200" measuredH="80" zOrder="14" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Bilder%20von%20dieser%20SimpleCam%20werden%20an%20folgende%20Empf%E4nger%20geschickt.%20Um%20einen%20Empf%E4nger%20zu%20l%F6schen%2C%20klicken%20sie%20auf%20das%20Kreuz%20neben%20dem%20entsprechenden%20Eintrag.%20Ihre%20eigene%20Email-Adresse%20k%F6nnen%20Sie%20nicht%20l%F6schen.%0A%20%0AFrank%20%28frank@seidel-stahl.de%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="28" controlTypeID="com.balsamiq.mockups::Button" x="517" y="512" w="-1" h="-1" measuredW="214" measuredH="27" zOrder="15" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Weiteren%20Empf%E4nger%20hinzuf%FCgen</text>
+      </controlProperties>
+    </control>
+  </controls>
+</mockup>
