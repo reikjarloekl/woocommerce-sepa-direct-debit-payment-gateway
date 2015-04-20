@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 class EmailAddress(models.Model):
     user = models.ForeignKey(User, null=True)
+    name = models.CharField(max_length=60, default="")
     address = models.EmailField(max_length=254)
 
     def __str__(self):

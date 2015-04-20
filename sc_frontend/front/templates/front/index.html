@@ -1,0 +1,42 @@
+{% extends "front/base.html" %}
+{% load staticfiles %}
+
+{% block base_content %}
+    {% for camera in cameras %}
+        <div class="row">
+            <div class="col-md-12">
+                <h2>SimpleCam #{{ camera.id }}: {{ camera.name }}</h2>
+                <hr/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <a class="fancybox" rel="group" href="{% static "front/0001-20150414-035820.jpg" %}"><img width="100%" src="{% static "front/0001-20150414-035820.jpg" %}"/></a>
+            </div>
+            <div class="col-md-8">
+                <p>
+                    Bilder von dieser SimpleCam werden an folgende Empfänger geschickt.
+                    Um einen Empfänger zu löschen, klicken sie auf das Kreuz neben dem entsprechenden Eintrag.
+                    Ihre eigene Email-Adresse können Sie nicht löschen.
+                </p>
+                <ul class="list-unstyled">
+                    {% for address in camera.email_addresses.all %}
+                        <li>
+                            {{ address.name }} ({{ address.address }})
+                            {% if address.address != user.email %}
+                                <a href="another_django_url" class="icon" style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="btn btn-primary">Weiteren Empfänger hinzufügen</button>
+            </div>
+        </div>
+    {% endfor %}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".fancybox").fancybox();
+        });
+    </script>
+{% endblock %}
