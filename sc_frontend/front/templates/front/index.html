@@ -27,7 +27,7 @@
                         <li>
                             {{ address.name }} ({{ address.address }})
                             {% if address.address != user.email %}
-                                <a href="another_django_url" class="icon" style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
+                                <a href="/another_django_url" class="icon" style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
                             {% endif %}
                         </li>
                     {% endfor %}
