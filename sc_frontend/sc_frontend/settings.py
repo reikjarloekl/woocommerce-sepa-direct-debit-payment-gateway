@@ -27,7 +27,7 @@ TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['app.simplecam.de', '127.0.0.1']
 
-XFRAME_EXEMPT_HOSTS = ['www.simplecam.de']
+XFRAME_EXEMPT_HOSTS = ['www.simplecam.de', 'app.simplecam.de']
 
 # Application definition
 
