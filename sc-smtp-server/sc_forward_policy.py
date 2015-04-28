@@ -39,15 +39,15 @@ class ScForward(QueuePolicy):
             # Applications should really sanitize the given filename so that an
             # email message can't be used to overwrite important files
 
-            now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = '%04d-%s.jpg' % (camera_id, now)
+            received = datetime.datetime.now()
+            filename = '%04d-%s.jpg' % (camera_id, received.strftime("%Y%m%d-%H%M%S"))
             img_data = part.get_payload(decode=True)
             with open(os.path.join(settings.IMAGE_DIR, filename), 'wb') as fp:
                 logger.debug('Writing attached image to {}'.format(fp.name))
                 fp.write(img_data)
 
             img = self.get_mime_image(img_data, filename)
-            return img, filename
+            return img, received, filename
 
     def get_message(self, img, img_filename):
         msg = MIMEMultipart()
@@ -79,7 +79,7 @@ class ScForward(QueuePolicy):
         caminfo = ScCameraInformation(camera_id)
         logger.debug('{}: Retrieved camera information from db: {}'.format(id(envelope), caminfo))
         try:
-            img, filename = self.get_image(camera_id, "".join(envelope.flatten()))
+            img, received, filename = self.get_image(camera_id, "".join(envelope.flatten()))
         except TypeError:
             img = None
         if img is None:
@@ -87,6 +87,8 @@ class ScForward(QueuePolicy):
                                                                                      settings.FORWARD_UNKNOWN_EMAILS_TO))
             envelope.recipients = [settings.FORWARD_UNKNOWN_EMAILS_TO]
             return
+
+        caminfo.add_image(received)
         logger.info('Processing image from camera #{} ({})'.format(camera_id, filename))
         msg = self.get_message(img, filename)
         recipients = caminfo.get_forward_addresses()

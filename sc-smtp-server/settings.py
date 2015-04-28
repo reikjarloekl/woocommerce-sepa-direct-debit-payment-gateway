@@ -1,8 +1,6 @@
 import logging
 import os
 
-__author__ = 'Joern'
-
 BASE_DIR = os.path.dirname(__file__)
 
 # Logging level and target

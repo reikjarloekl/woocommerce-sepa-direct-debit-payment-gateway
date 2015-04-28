@@ -16,6 +16,7 @@ class ScCameraInformation:
         self._camera = self._base.classes.front_camera
         self._camera_mapping = self._base.classes.front_camera_email_addresses
         self._email_address = self._base.classes.front_emailaddress
+        self._image = self._base.classes.front_image
         self._session = Session(self._engine)
 
     def get_forward_addresses(self):
@@ -29,11 +30,24 @@ class ScCameraInformation:
             .filter(self._camera.id == self._camera_id)
         return query.first()[0]
 
+    def get_latest_image(self):
+        return self._session.query(self._image)\
+            .filter(self._image.camera_id == self._camera_id)\
+            .order_by(self._image.id.desc()).first()
+
+    def add_image(self, received):
+        self._session.add(self._image(camera_id=self._camera_id, received=received))
+        self._session.commit()
+
     def __repr__(self):
         template = "Camera #{}, Name: {}, Forward addresses: {}"
         return template.format(self._camera_id, self.get_name(), self.get_forward_addresses())
 
 if __name__ == "__main__":
+    print settings.DATABASE_URL
     caminfo = ScCameraInformation(1)
     print caminfo.get_forward_addresses()
     print caminfo.get_name()
+    from datetime import datetime
+    caminfo.add_image(datetime.now())
+    print caminfo.get_latest_image().received
