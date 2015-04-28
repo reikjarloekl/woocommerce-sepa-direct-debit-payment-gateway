@@ -27,6 +27,7 @@ TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['app.simplecam.de', '127.0.0.1']
 
+XFRAME_EXEMPT_HOSTS = ['www.simplecam.de']
 
 # Application definition
 
@@ -48,7 +49,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'sc_frontend.jwt_authentication.jwt_authentication_middleware.JwtAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'sc_frontend.sc_xframe_option_middleware.sc_xframe_option_middleware.SCXFrameOptionsMiddleware',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -87,7 +88,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
