@@ -95,6 +95,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/simplecam.de/static'
 
+# Directory where the received images are stored.
+IMAGE_DIR = '/var/opt/simplecam/images'
+
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )
