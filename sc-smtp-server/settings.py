@@ -11,7 +11,7 @@ LOG_FILE = '/var/log/sc-smtp/sc-smtp.log'
 SMTP_PORT = 1025
 
 # Database connection string
-DATABASE_URL = 'sqlite:////home/joern/sc-smtp-server/db.sqlite3'
+DATABASE_URL = 'mysql://sc_smtp:k4VczgPtBwpHVdjFeFvi@localhost/simplecam'
 
 # HTML content of mail sent to recipients
 MAIL_CONTENT = """
