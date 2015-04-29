@@ -39,7 +39,11 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            $(".fancybox").fancybox();
+            $(".fancybox").fancybox({
+                type        : 'image',
+                openEffect  : 'none',
+                closeEffect : 'none'
+            });
         });
     </script>
 {% endblock %}
