@@ -1,6 +1,12 @@
 {% extends "front/base.html" %}
 {% load staticfiles %}
 
+{% block css %}
+    .fancybox-nav {
+      display:none;
+    }
+{% endblock %}
+
 {% block base_content %}
     {% for camera in cameras %}
         <div class="row">
