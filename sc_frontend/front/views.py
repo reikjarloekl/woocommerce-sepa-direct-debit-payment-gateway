@@ -28,7 +28,7 @@ def latest_image(request, camera_id):
 
     filename = '%04d-%s.jpg' % (int(camera_id), image.received.strftime("%Y%m%d-%H%M%S"))
     filepath = os.path.join(settings.IMAGE_DIR, filename)
-    response = HttpResponse()
+    response = HttpResponse(mimetype='image/jpeg')
     response['X-Sendfile'] = smart_str(filepath)
     return response
 
