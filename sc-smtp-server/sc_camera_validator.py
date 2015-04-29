@@ -5,6 +5,7 @@ import re
 from slimta.edge.smtp import SmtpValidators
 from slimta.smtp.auth import CredentialsInvalidError, Auth
 from slimta.smtp.auth.standard import Login
+from sc_camera_information.sc_camera_information import ScCameraInformation
 import settings
 
 __author__ = 'Joern'
@@ -20,6 +21,11 @@ class ScValidators(SmtpValidators):
 class ScAuth(Auth):
     def get_password(self, user_id):
         camera_id = user_id.split('@')[0]
+        try:
+            ScCameraInformation(camera_id)
+        except IndexError:
+            raise CredentialsInvalidError()
+
         expected_pw = base64.b64encode(hmac.new(settings.SECRET_KEY, camera_id, hashlib.sha256).digest())[:20]
         return expected_pw
 
@@ -44,6 +50,11 @@ class ScCameraValidator(object):
     def validate(self, username, password):
 
         camera_id = username.split('@')[0]
+        try:
+            ScCameraInformation(camera_id)
+        except IndexError:
+            return False
+
         expected_pw = base64.b64encode(hmac.new(settings.SECRET_KEY, camera_id, hashlib.sha256).digest())[:20]
 
         if password == expected_pw:
