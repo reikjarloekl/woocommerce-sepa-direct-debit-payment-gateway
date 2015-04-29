@@ -5,7 +5,7 @@ import time
 import os
 from slimta.envelope import Envelope
 from slimta.policy import QueuePolicy
-from sc_camera_information import ScCameraInformation
+from sc_camera_information.sc_camera_information import ScCameraInformation
 import settings
 from email import email
 from email.mime.multipart import MIMEMultipart
