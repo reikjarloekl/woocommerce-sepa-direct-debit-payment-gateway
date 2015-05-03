@@ -5,6 +5,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import smart_str
+from django_ajax.decorators import ajax
 from front.models import Camera, Image
 from sc_frontend import settings
 
@@ -31,6 +32,14 @@ def latest_image(request, camera_id):
     response = HttpResponse(content_type='image/jpeg')
     response['X-Sendfile'] = smart_str(filepath)
     return response
+
+
+@login_required
+@ajax
+def delete_mail_forward(request, camera_id, address_id):
+    camera = get_object_or_404(Camera, id=camera_id, user=request.user)
+    address = camera.email_addresses.get(id=address_id)
+    return {'address': address.address }
 
 
 def dummy(request):

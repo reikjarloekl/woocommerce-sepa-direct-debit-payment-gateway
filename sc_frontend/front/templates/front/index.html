@@ -8,6 +8,33 @@
 {% endblock %}
 
 {% block base_content %}
+    <script type="application/javascript">
+        $(document).ready(function(){
+            bootbox.setDefaults({
+                /**
+                * @optional String
+                * @default: en
+                * which locale settings to use to translate the three
+                * standard button labels: OK, CONFIRM, CANCEL
+                */
+                locale: "de"
+            });
+            $('.del_email').click(function(e) {
+                var item = this;
+                var confirm_text = "Wenn Sie fortfahren, werden Bilder von SimpleCam '" + $(item).data('camera_name') + "' nicht mehr an " + $(item).closest('li').text() + "gesendet.";
+                bootbox.confirm({message: confirm_text, locale: 'de', callback: function(result) {
+                    if (!result) return;
+                    var url = "{% url 'delete_mail_forward' camera_id=1111 address_id=2222 %}"
+                            .replace(/1111/, $(item).data('camera_id'))
+                            .replace(/2222/, $(item).data('address_id'))
+                    $.post(url, {csrfmiddlewaretoken: '{{csrf_token}}'}, function( data ) {
+                        $(item).closest('li').fadeOut(500, function(){ $(this).remove();});
+                    });
+                }});
+            });
+        });
+    </script>
+
     {% for camera in cameras %}
         <div class="row">
             <div class="col-md-12">
@@ -32,9 +59,11 @@
                     {% for address in camera.email_addresses.all %}
                         <li>
                             {{ address.name }} ({{ address.address }})
-                            {% if address.address != user.email %}
-                                <a href="/another_django_url" class="icon" style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
-                            {% endif %}
+                            <a href="#" class="icon del_email"
+                               data-camera_id="{{ camera.id }}"
+                               data-camera_name="{{ camera.name }}"
+                               data-address_id="{{ address.id }}"
+                               style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
                         </li>
                     {% endfor %}
                 </ul>
