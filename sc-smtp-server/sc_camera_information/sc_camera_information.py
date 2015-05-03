@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 import settings
-from __init__ import db_engine, Camera, Image, Email_address, Camera_mapping
+from __init__ import db_engine, Camera, Image, Email_address, Camera_mapping, User
 
 __author__ = 'Joern'
 
@@ -13,10 +13,12 @@ class ScCameraInformation:
             raise IndexError('Camera with ID {} not found in database.'.format(camera_id))
 
     def get_forward_addresses(self):
-        query = self._session.query(Email_address.address)\
+        user_address = self._session.query(User.email)\
+            .filter(User.id == self._camera.user_id).first().email
+        linked_mail_addresses = self._session.query(Email_address.address)\
             .filter(Camera_mapping.emailaddress_id == Email_address.id)\
-            .filter(Camera_mapping.camera_id == self._camera_id)
-        return [row[0] for row in query.all()]
+            .filter(Camera_mapping.camera_id == self._camera_id).all()
+        return [row.address for row in linked_mail_addresses] + [user_address]
 
     def get_name(self):
         return self._camera.name
@@ -35,10 +37,8 @@ class ScCameraInformation:
         return template.format(self._camera_id, self.get_name(), self.get_forward_addresses())
 
 if __name__ == "__main__":
-    print settings.DATABASE_URL
+    print "settings.DATABASE_URL: {}".format(settings.DATABASE_URL)
     caminfo = ScCameraInformation(1)
-    print caminfo.get_forward_addresses()
-    print caminfo.get_name()
-    from datetime import datetime
-    caminfo.add_image(datetime.now())
-    print caminfo.get_latest_image().received
+    print "Forward addresses: {}".format(caminfo.get_forward_addresses())
+    print "Name: {}".format(caminfo.get_name())
+    print "Latest image from: {}".format(caminfo.get_latest_image().received)
