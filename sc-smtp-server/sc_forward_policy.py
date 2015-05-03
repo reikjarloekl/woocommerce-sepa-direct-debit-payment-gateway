@@ -49,7 +49,7 @@ class ScForward(QueuePolicy):
             img = self.get_mime_image(img_data, filename)
             return img, received, filename
 
-    def get_message(self, img, img_filename):
+    def create_message(self, img, img_filename):
         msg = MIMEMultipart()
         msg_alternative = MIMEMultipart('alternative')
         msg.attach(msg_alternative)
@@ -90,12 +90,12 @@ class ScForward(QueuePolicy):
 
         caminfo.add_image(received)
         logger.info('Processing image from camera #{} ({})'.format(camera_id, filename))
-        msg = self.get_message(img, filename)
+        msg = self.create_message(img, filename)
         recipients = caminfo.get_forward_addresses()
 
-        ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         new_env = Envelope(settings.SENDER_ADDRESS, recipients)
         new_env.parse(msg)
+        ts = datetime.datetime.fromtimestamp(envelope.timestamp).strftime('%d.%m.%Y %H:%M:%S')
         new_env.prepend_header('Subject', 'SimpleCam {}: {}'.format(caminfo.get_name(), ts))
         new_env.prepend_header('To', ', '.join(recipients))
         new_env.prepend_header('From', '"{}" <{}>'.format(settings.SENDER_NAME, settings.SENDER_ADDRESS))
