@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block base_content %}
-    <script type="application/javascript">
+    <script type="application/javascript" xmlns="http://www.w3.org/1999/html">
         $(document).ready(function(){
             bootbox.setDefaults({
                 /**
@@ -19,6 +19,7 @@
                 */
                 locale: "de"
             });
+            // Behaviour for email-delete buttons.
             $('.del_email').click(function(e) {
                 var item = this;
                 var confirm_text = "Wenn Sie fortfahren, werden Bilder von SimpleCam '" + $(item).data('camera_name') + "' nicht mehr an " + $(item).closest('li').text() + "gesendet.";
@@ -32,44 +33,110 @@
                     });
                 }});
             });
+            // Add new email modal
+            // Auto-complete for new email addresses
+            $('.ctrlExistingEmail').selectize({
+                diacritics: true,
+                openOnFocus: true
+            });
+            $('.addMailCollapse').on('show.bs.collapse', function() {
+                var item = this;
+                var camera_id = $(item).data('camera_id');
+                var btn = $('#addMailBtn-' + camera_id);
+                $(btn).hide();
+            });
+            $('.addMailCollapse').on('hidden.bs.collapse', function() {
+                var item = this;
+                var camera_id = $(item).data('camera_id');
+                var btn = $('#addMailBtn-' + camera_id);
+                $(btn).show();
+            });
+            $( ".frmAddNewMail" ).submit(function( event ) {
+                var item = this;
+                var camera_id = $(item).data('camera_id');
+                event.preventDefault();
+            });
         });
     </script>
 
-    {% for camera in cameras %}
-        <div class="row">
-            <div class="col-md-12">
-                <h2>SimpleCam #{{ camera.id }}: {{ camera.name }}</h2>
-                <hr/>
+    {% for camera_info in camera_infos %}
+        {% with camera=camera_info.camera %}
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>SimpleCam #{{ camera.id }}: {{ camera.name }}</h2>
+                    <hr/>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4">
-                <a class="fancybox" rel="group" href="{% url 'latest_image' camera.id %}"><img width="100%" src="{% url 'latest_image' camera.id %}"/></a>
-            </div>
-            <div class="col-md-8">
-                <p>
-                    Bilder von dieser SimpleCam werden an folgende Empfänger geschickt.
-                    Um einen Empfänger zu löschen, klicken sie auf das Kreuz neben dem entsprechenden Eintrag.
-                    Ihre eigene Email-Adresse können Sie nicht löschen.
-                </p>
-                <ul class="list-unstyled">
-                    <li>
-                        {{ user.get_full_name }} ({{ user.email }})
-                    </li>
-                    {% for address in camera.email_addresses.all %}
+            <div class="row">
+                <div class="col-md-4">
+                    <a class="fancybox" rel="group" href="{% url 'latest_image' camera.id %}"><img width="100%" src="{% url 'latest_image' camera.id %}"/></a>
+                </div>
+                <div class="col-md-8">
+                    <p>
+                        Bilder von dieser SimpleCam werden an folgende Empfänger geschickt.
+                        Um einen Empfänger zu löschen, klicken sie auf das Kreuz neben dem entsprechenden Eintrag.
+                        Ihre eigene Email-Adresse können Sie nicht löschen.
+                    </p>
+                    <ul class="list-unstyled">
                         <li>
-                            {{ address.name }} ({{ address.address }})
-                            <a href="#" class="icon del_email"
-                               data-camera_id="{{ camera.id }}"
-                               data-camera_name="{{ camera.name }}"
-                               data-address_id="{{ address.id }}"
-                               style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
+                            {{ user.get_full_name }} ({{ user.email }})
                         </li>
-                    {% endfor %}
-                </ul>
-                <button type="button" class="btn btn-primary">Weiteren Empfänger hinzufügen</button>
+                        {% for address in camera.email_addresses.all %}
+                            <li>
+                                {{ address.name }} ({{ address.address }})
+                                <a href="#" class="icon del_email"
+                                   data-camera_id="{{ camera.id }}"
+                                   data-camera_name="{{ camera.name }}"
+                                   data-address_id="{{ address.id }}"
+                                   style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="collapse addMailCollapse" data-camera_id="{{ camera.id }}" id="addMail-{{ camera.id }}">
+                        <hr>
+                        {% if camera_info.addable_mail_addresses %}
+                            <form role="form" class="frmAddExistingMail" data-camera_id="{{ camera.id }}">
+                                <p>
+                                    Sie können aus der folgenden Liste einen bekannten Empfänger auswählen, oder unten einen neuen Empfänger hinzufügen.
+                                </p>
+                                <div class="form-group">
+                                    <label for="name" class="control-label">Name:</label>
+                                    <select type="text" placeholder="Bitte einen Empfänger auswählen..." autocomplete="off" class="form-control ctrlExistingEmail"/>
+                                        {% for address in camera_info.addable_mail_addresses %}
+                                            <option value="{{ address.id }}">{{ address.name }}&colon;&nbsp;{{ address.address }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                              <button type="submit" class="btn btn-default btn-primary">Hinzufügen</button>
+                              <button type="button" class="btn btnAddMailCancel" data-toggle="collapse" data-target="#addMail-{{ camera.id }}">Abbrechen</button>
+                            </form>
+                            <hr>
+                        {% endif %}
+                        <form role="form" class="frmAddNewMail" data-camera_id="{{ camera.id }}" data-toggle="validator">
+                            <p>
+                                Geben Sie den Namen und die Email-Adresse des neuen Empfängers für Fotos von dieser SimpleCam ein.
+
+                                Wir schicken dem Empfänger eine Einladungs-Email an die angegebene Email-Adresse. Den darin enthaltenen Bestätigungs-Link muss der Empfänger klicken,
+                                bevor er Fotos erhalten kann. Die Einladungs-Email enthält Ihren Namen, damit der Empfänger weiß, woher die Einladung zu SimpleCam stammt.
+                            </p>
+                          <div class="form-group">
+                              <label for="name" class="control-label">Name:</label>
+                              <input type="text" autocomplete="off" class="form-control" data-error="Bitte geben Sie einen Namen ein." id="new-email-name" required/>
+                              <div class="help-block with-errors"></div>
+                          </div>
+                          <div class="form-group">
+                              <label for="email" class="control-label">Message:</label>
+                              <input type="email" class="form-control" id="email" data-error="Bitte geben Sie eine gültige Email-Adresse ein." required/>
+                              <div class="help-block with-errors"></div>
+                          </div>
+                          <button type="submit" class="btn btn-default btn-primary">Hinzufügen</button>
+                          <button type="button" class="btn btnAddMailCancel" data-toggle="collapse" data-target="#addMail-{{ camera.id }}">Abbrechen</button>
+                        </form>
+                    </div>
+                    <button id="addMailBtn-{{ camera.id }}" type="button" data-toggle="collapse" data-target="#addMail-{{ camera.id }}" class="btn btnAddMail btn-primary">Weiteren Empfänger hinzufügen</button>
+                </div>
             </div>
-        </div>
+        {% endwith %}
     {% endfor %}
 
     <script type="text/javascript">

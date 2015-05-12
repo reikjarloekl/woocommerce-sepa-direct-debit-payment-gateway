@@ -17,12 +17,15 @@
 
         {% block css %}{% endblock %}
     </style>
-    <link href="{% static "front/css/bootstrap-responsive.min.css" %} rel=" stylesheet">
+    <link href="{% static "front/css/selectize/selectize.css" %}" rel="stylesheet">
+    <link href="{% static "front/css/selectize/selectize.bootstrap3.css" %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static "front/js/jquery-ui-1.11.4/jquery-ui.min.css" %}">
     <script src="{% static "front/js/jquery-ui-1.11.4/external/jquery/jquery.js" %}"></script>
     <script src="{% static "front/js/jquery-ui-1.11.4/jquery-ui.min.js" %}"></script>
+    <script src="{% static "front/js/selectize/selectize.js" %}"></script>
     <script src="{% static "front/js/iframeResizer.contentWindow.min.js" %}"></script>
     <script src="{% static "front/js/bootbox.min.js" %}"></script>
+    <script src="{% static "front/js/validator.min.js" %}"></script>
 
     <!-- Add fancyBox -->
     <link rel="stylesheet" href="{% static "front/js/fancybox/jquery.fancybox.css" %}" type="text/css" media="screen"/>
@@ -44,7 +47,12 @@
     {%  endcomment %}
 </head>
 
-<body>
+<body>#
+<script type="application/javascript">
+   $( document ).ajaxError(function() {
+       bootbox.alert("Irgendetwas ist schief gegangen. Bitte versuchen Sie es nochmal oder laden die Seite neu.");
+   });
+</script>
 <div class="container">
     {% if messages %}
         <div class="row">

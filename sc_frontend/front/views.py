@@ -5,16 +5,26 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import smart_str
+from django.views.decorators.http import require_POST
 from django_ajax.decorators import ajax
-from front.models import Camera, Image
+from front.models import Camera, Image, EmailAddress
 from sc_frontend import settings
 
 
 @login_required
 def index(request):
-    cameras = Camera.objects.filter(user=request.user)
+    camera_objects = Camera.objects.filter(user=request.user)
+    camera_infos = []
+    for camera in camera_objects:
+        addresses_already_attached = camera.email_addresses.values_list('id', flat=True)
+        addable_addresses = EmailAddress.objects.filter(user=request.user).exclude(id__in=list(addresses_already_attached)).values();
+        print "Addable addresses for camera {}: {}".format(camera.id, addable_addresses)
+        camera_info = {
+            'camera': camera,
+            'addable_mail_addresses': addable_addresses}
+        camera_infos.append(camera_info)
     context = RequestContext(request, {
-        'cameras': cameras,
+        'camera_infos': camera_infos,
     })
     return render_to_response('front/index.html', context)
 
@@ -35,13 +45,11 @@ def latest_image(request, camera_id):
 
 
 @login_required
+@require_POST
 @ajax
 def delete_mail_forward(request, camera_id, address_id):
     camera = get_object_or_404(Camera, id=camera_id, user=request.user)
     address = camera.email_addresses.get(id=address_id)
-    return {'address': address.address }
+    camera.email_addresses.remove(address)
 
 
-def dummy(request):
-    context = RequestContext(request)
-    return render_to_response('front/base.html', context)
