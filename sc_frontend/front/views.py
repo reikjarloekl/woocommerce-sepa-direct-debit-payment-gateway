@@ -13,18 +13,9 @@ from sc_frontend import settings
 
 @login_required
 def index(request):
-    camera_objects = Camera.objects.filter(user=request.user)
-    camera_infos = []
-    for camera in camera_objects:
-        addresses_already_attached = camera.email_addresses.values_list('id', flat=True)
-        addable_addresses = EmailAddress.objects.filter(user=request.user).exclude(id__in=list(addresses_already_attached)).values();
-        print "Addable addresses for camera {}: {}".format(camera.id, addable_addresses)
-        camera_info = {
-            'camera': camera,
-            'addable_mail_addresses': addable_addresses}
-        camera_infos.append(camera_info)
+    cameras = Camera.objects.filter(user=request.user)
     context = RequestContext(request, {
-        'camera_infos': camera_infos,
+        'cameras': cameras,
     })
     return render_to_response('front/index.html', context)
 
@@ -53,3 +44,31 @@ def delete_mail_forward(request, camera_id, address_id):
     camera.email_addresses.remove(address)
 
 
+@login_required
+@require_POST
+@ajax
+def add_mail_forward(request, camera_id):
+    camera = get_object_or_404(Camera, id=camera_id, user=request.user)
+    name = request.POST['name']
+    email = request.POST['email']
+    try:
+        address = EmailAddress.objects.get(user=request.user, address=email.lower())
+        print "Address ({}) already exists. Overwriting name.".format(email.lower(), )
+        address.name = name
+        address.save()
+    except ObjectDoesNotExist:
+        address = EmailAddress(user=request.user, address=email.lower(), name=name)
+        address.save()
+    if not address.verified:
+        print "Address not verified."
+    camera.email_addresses.add(address)
+    return None
+
+
+@login_required
+def mail_forwards(request, camera_id):
+    camera = get_object_or_404(Camera, id=camera_id, user=request.user)
+    context = RequestContext(request, {
+        'forwards': camera.email_addresses,
+    })
+    return render_to_response('front/forwards.html', context)

@@ -1,0 +1,13 @@
+ <ul class="list-unstyled">
+     <li>
+        {{ user.get_full_name }} ({{ user.email }})
+    </li>
+    {% for address in forwards.all %}
+        <li>
+            {{ address.name }} ({{ address.address }})
+            <a href="#" class="icon del_email"
+                data-address_id="{{ address.id }}"
+                style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
+        </li>
+     {% endfor %}
+ </ul>
