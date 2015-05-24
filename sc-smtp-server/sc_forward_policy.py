@@ -56,7 +56,7 @@ class ScForward(QueuePolicy):
         msg_related = MIMEMultipart('related')
         msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
         msg_alternative.attach(msg_related)
-        msg_html = MIMEText(settings.MAIL_CONTENT.format(self.get_content_id(img_filename), 'html'))
+        msg_html = MIMEText(settings.MAIL_CONTENT.format(self.get_content_id(img_filename)), 'html')
         msg_related.attach(msg_html)
         msg_related.attach(img)
         return msg
