@@ -14,7 +14,6 @@ from email.mime.image import MIMEImage
 
 __author__ = 'Joern'
 
-LOGO_NAME = 'logo.jpg'
 logger = logging.getLogger(__name__)
 
 class ScForward(QueuePolicy):
@@ -57,13 +56,9 @@ class ScForward(QueuePolicy):
         msg_related = MIMEMultipart('related')
         msg_alternative.attach(MIMEText(settings.MAIL_CONTENT_ALTERNATIVE, 'plain'))
         msg_alternative.attach(msg_related)
-        msg_html = MIMEText(settings.MAIL_CONTENT.format(self.get_content_id(img_filename),
-                                                         self.get_content_id(LOGO_NAME)), 'html')
+        msg_html = MIMEText(settings.MAIL_CONTENT.format(self.get_content_id(img_filename), 'html'))
         msg_related.attach(msg_html)
         msg_related.attach(img)
-        logo_data = open(settings.SC_LOGO_FILE, 'rb').read()
-        logo = self.get_mime_image(logo_data, LOGO_NAME)
-        msg_related.attach(logo)
         return msg
 
     def apply(self, envelope):
