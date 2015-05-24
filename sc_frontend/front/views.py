@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import smart_str
 from django.views.decorators.http import require_POST
 from django_ajax.decorators import ajax
+from front.confirmation_email import send_confirmation_email, check_confirmation
 from front.models import Camera, Image, EmailAddress
 from sc_frontend import settings
 
@@ -60,6 +61,7 @@ def add_mail_forward(request, camera_id):
         address = EmailAddress(user=request.user, address=email.lower(), name=name)
         address.save()
     if not address.verified:
+        send_confirmation_email(request, camera, email, address.id)
         print "Address not verified."
     camera.email_addresses.add(address)
     return None
@@ -72,3 +74,8 @@ def mail_forwards(request, camera_id):
         'forwards': camera.email_addresses,
     })
     return render_to_response('front/forwards.html', context)
+
+
+def confirm_email(request, token):
+    check_confirmation(token)
+    return None

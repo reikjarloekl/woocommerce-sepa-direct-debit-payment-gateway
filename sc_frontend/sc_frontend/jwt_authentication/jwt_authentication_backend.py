@@ -6,7 +6,7 @@ __author__ = 'Joern'
 class JwtBackend(RemoteUserBackend):
     def authenticate(self, login, first_name, last_name, email, id):
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(username=login)
             print 'User already in DB.'
         except User.DoesNotExist:
             print 'User not found. Creating new.'

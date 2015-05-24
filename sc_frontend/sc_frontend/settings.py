@@ -99,6 +99,16 @@ STATIC_ROOT = '/var/www/simplecam.de/static'
 # Directory where the received images are stored.
 IMAGE_DIR = '/var/opt/simplecam/images'
 
+# Confirmation Mail settings
+CONFIRMATION_MAIL_SUBJECT = 'Einladung zu SimpleCam {}'
+CONFIRMATION_MAIL_SENDER = 'info@simplecam.de'
+
+# Email settings
+EMAIL_HOST = 'wp228.webpack.hosteurope.de'
+EMAIL_HOST_USER = 'wp1089149-info'
+EMAIL_HOST_PASSWORD = 'wS94piCr4jwFntUkKrB0'
+
+
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,  'templates'),
 )

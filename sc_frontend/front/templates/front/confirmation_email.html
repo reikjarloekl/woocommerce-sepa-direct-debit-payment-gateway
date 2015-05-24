@@ -1,0 +1,9 @@
+<p>
+    {{ user.get_full_name }} möchte Bilder der SimpleCam Online-Wildkamera "{{ camera.name }}" mit Ihnen teilen.
+    Wenn Sie zustimmen, bekommmen Sie in Zukunft alle Bilder dieser SimpleCam automatisch zugeschickt. Klicken Sie dazu den
+    folgenden Link:
+</p>
+<a href="{{ confirmation_link }}">Bestätigen</a>
+<p>
+    Wenn Sie {{ user.get_full_name }} nicht kennen oder keine Bilder bekommen möchten, brauchen Sie nichts weiter tun.
+</p>
