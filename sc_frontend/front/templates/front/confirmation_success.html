@@ -1,0 +1,16 @@
+{% extends "front/base.html" %}
+{% load staticfiles %}
+
+{% block css %}
+{% endblock %}
+
+{% block base_content %}
+<div class="row">
+    <div class="alert alert-success" role="alert">Das hat geklappt!</div>
+    <div class="col-md-12">
+        <div class="well">
+            Super! Sie können ab sofort Bilder von SimpleCam an die Email-Adresse "{{ address.address }}" empfangen.
+        </div>
+    </div>
+</div>
+{% endblock %}

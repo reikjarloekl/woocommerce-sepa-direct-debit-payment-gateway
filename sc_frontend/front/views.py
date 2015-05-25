@@ -1,4 +1,5 @@
 import os
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response, get_object_or_404
@@ -77,5 +78,12 @@ def mail_forwards(request, camera_id):
 
 
 def confirm_email(request, token):
-    check_confirmation(token)
-    return None
+    address = check_confirmation(token)
+    context = RequestContext(request, {
+        'address': address,
+    })
+    if address is None:
+        messages.error(request, 'Etwas ist schiefgegangen!')
+        return render_to_response('front/confirmation_error.html', context)
+    else:
+        return render_to_response('front/confirmation_success.html', context)

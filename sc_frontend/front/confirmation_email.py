@@ -11,7 +11,7 @@ __author__ = 'Joern'
 
 def send_confirmation_email(request, camera, receiver, email_id):
     confirmation_token = jwt.encode({'email_id': email_id}, settings.JWT_AUTH_KEY, algorithm='HS256')
-    confirmation_link = request.build_absolute_uri(reverse('confirm_email', args=(confirmation_token,)))
+    confirmation_link = settings.CONFIRMATION_MAIL_URL.format(confirmation_token)
     params = {'confirmation_link': confirmation_link,
               'user': request.user,
               'camera': camera}
@@ -28,8 +28,12 @@ def check_confirmation(token):
     try:
         payload = jwt.decode(token, settings.JWT_AUTH_KEY, algorithms=['HS256'])
     except jwt.DecodeError:
-        return
-    address = get_object_or_404(EmailAddress, id=payload['email_id'])
+        return None
+    try:
+        address = EmailAddress.objects.get(id=payload['email_id'])
+    except EmailAddress.DoesNotExist:
+        return None
     address.verified = True
     address.save()
+    return address
 
