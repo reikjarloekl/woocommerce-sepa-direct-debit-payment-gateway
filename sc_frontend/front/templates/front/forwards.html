@@ -3,9 +3,9 @@
         {{ user.get_full_name }} ({{ user.email }})
     </li>
     {% for address in forwards.all %}
-        <li>
-            {{ address.name }} ({{ address.address }})
-            <a href="#" class="icon del_email"
+        <li {% if not address.verified %}style="color: darkgray;"{% endif %}>
+            {{ address.name }} ({{ address.address }}{% if not address.verified %}, unbestätigt{% endif %})
+            <a href="#" class="icon del_email" 
                 data-address_id="{{ address.id }}"
                 style="color:red"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span></a>
         </li>
