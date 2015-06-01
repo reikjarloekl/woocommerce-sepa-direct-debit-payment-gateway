@@ -77,6 +77,17 @@ def mail_forwards(request, camera_id):
     return render_to_response('front/forwards.html', context)
 
 
+@login_required
+@require_POST
+@ajax
+def update_camera_name(request, camera_id):
+    name = request.POST['value']
+    camera = get_object_or_404(Camera, id=camera_id, user=request.user)
+    camera.name = name
+    camera.save()
+    return None
+
+
 def confirm_email(request, token):
     address = check_confirmation(token)
     context = RequestContext(request, {
@@ -87,3 +98,5 @@ def confirm_email(request, token):
         return render_to_response('front/confirmation_error.html', context)
     else:
         return render_to_response('front/confirmation_success.html', context)
+
+

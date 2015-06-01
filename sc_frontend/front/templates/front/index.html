@@ -15,6 +15,11 @@
                 .replace(/1111/, camera_id);
             $(target).load(url);
         }
+        function validate_camera_name(value) {
+            if($.trim(value) == '') {
+                return 'Bitte geben Sie einen Namen für diese SimpleCam ein.';
+            }
+        }
         $(document).ready(function(){
             $('.mail-forwards').on('click', '.del_email', function() {
                 var item = this;
@@ -74,14 +79,22 @@
                     });
                 event.preventDefault();
             });
+            $.fn.editable.defaults.mode = 'popup';
+            $('.camera_name').editable({
+                validate: validate_camera_name,
+                placement: 'bottom',
+                tpl: '<input type="text" maxlength="50">'
+            });
         });
     </script>
 
     {% for camera in cameras %}
         <div class="row">
             <div class="col-md-12">
-                <h2>SimpleCam #{{ camera.id }}: {{ camera.name }}</h2>
                 <hr/>
+                <h2>SimpleCam #{{ camera.id }}:
+                    <a href="#" class="camera_name" id="camera{{camera.id}}" data-type="text" data-pk="{{camera.id}}" data-url="{% url 'updatecameraname' camera.id %}" data-params="{csrfmiddlewaretoken:'{{csrf_token}}'}">{{ camera.name }}</a>
+                </h2>
             </div>
         </div>
         <div class="row camera-main-row" data-camera_id="{{ camera.id }}" data-camera_name="{{ camera.name }}">

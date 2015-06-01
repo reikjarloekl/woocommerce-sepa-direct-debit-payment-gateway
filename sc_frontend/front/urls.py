@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^(?P<camera_id>[0-9]+)/delete_mail_forward/(?P<address_id>[0-9]+)$', views.delete_mail_forward,
         name='delete_mail_forward'),
     url(r'^(?P<camera_id>[0-9]+)/add_mail_forward/$', views.add_mail_forward, name='add_mail_forward'),
+    url(r'^(?P<camera_id>[0-9]+)/update_camera_name/$', views.update_camera_name, name='updatecameraname'),
     url(r'^confirm_email/(?P<token>.+)$', views.confirm_email, name='confirm_email'),
 
 ]
