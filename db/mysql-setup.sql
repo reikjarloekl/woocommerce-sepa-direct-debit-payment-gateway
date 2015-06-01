@@ -7,7 +7,7 @@ GRANT SELECT ON simplecam.* TO 'sc_smtp'@'localhost';
 GRANT INSERT ON simplecam.front_image TO 'sc_smtp'@'localhost';
 
 CREATE DATABASE wordpress CHARACTER SET utf8;
-CREATE USER 'wp'@'localhost' IDENTIFIED BY '51OJIB1cEwbia5UkQX2P'
+CREATE USER 'wp'@'localhost' IDENTIFIED BY '51OJIB1cEwbia5UkQX2P';
 GRANT ALL PRIVILEGES ON wordpress.* TO 'wp'@'localhost';
 
 flush privileges;

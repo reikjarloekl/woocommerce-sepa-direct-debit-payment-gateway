@@ -17,7 +17,7 @@ DATABASE_URL = 'mysql://sc_smtp:k4VczgPtBwpHVdjFeFvi@localhost/simplecam'
 MAIL_CONTENT = """
 <img src="cid:{}">
 <br/>
-<img src="http://app.simplecam.de/static/front/sc_logo.jpg">
+<img src="http://www.simplecam.de/static/front/sc_logo.jpg">
 <br/>
 <a href="http://www.simplecam.de">http://www.simplecam.de</a>
 """
