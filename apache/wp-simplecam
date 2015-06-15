@@ -1,0 +1,4 @@
+<VirtualHost *:80>
+   ServerName www.simplecam.de
+   Redirect permanent / https://www.simplecam.de/
+</VirtualHost>
