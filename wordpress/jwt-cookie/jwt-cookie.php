@@ -25,7 +25,9 @@ function set_jwt_cookie($user_login, $user) {
 }
 
 function reset_jwt_cookie() {
-	setcookie(JWT_COOKIE_NAME, '', time() - 3600, "/", JWT_COOKIE_DOMAIN);    
+	setcookie(JWT_COOKIE_NAME, '', time() - 3600, "/", JWT_COOKIE_DOMAIN);
+	setcookie(DJANGO_SESSION_COOKIE_NAME, '', time() - 3600, "/", DJANGO_SESSION_COOKIE_DOMAIN);
+	
 }
 
 add_action('wp_login', 'set_jwt_cookie', 10, 2);
