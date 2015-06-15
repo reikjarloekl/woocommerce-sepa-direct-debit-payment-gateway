@@ -23,6 +23,12 @@ function set_jwt_cookie($user_login, $user) {
 	$cookie = $jwt->encode($payload, AUTH_KEY);
 	setcookie(JWT_COOKIE_NAME, $cookie, time() + 14 * DAY_IN_SECONDS, "/", JWT_COOKIE_DOMAIN, false, true);    
 }
+
+function reset_jwt_cookie() {
+	setcookie(JWT_COOKIE_NAME, '', time() - 3600, "/", JWT_COOKIE_DOMAIN);    
+}
+
 add_action('wp_login', 'set_jwt_cookie', 10, 2);
+add_action('wp_logout', 'reset_jwt_cookie', 10, 2);
 
 ?>
