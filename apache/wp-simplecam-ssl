@@ -1,0 +1,35 @@
+<VirtualHost *:443>
+        ServerName www.simplecam.de
+        DocumentRoot /var/www/wordpress/simplecam
+
+        SSLEngine on
+        SSLCertificateFile "/etc/ssl/localcerts/www.simplecam.de.pem"
+        SSLCertificateKeyFile "/etc/ssl/localcerts/www.simplecam.de.key"
+
+        CustomLog ${APACHE_LOG_DIR}/access_wp_simplecam.log combined
+        ErrorLog ${APACHE_LOG_DIR}/error_wp_simplecam.log
+
+        <Directory /var/www/wordpress/simplecam>
+            Options FollowSymLinks
+            AllowOverride Limit Options FileInfo
+            DirectoryIndex index.php
+            Order allow,deny
+            Allow from all
+        </Directory>
+
+        Alias /static/ /var/www/simplecam.de/static/
+
+        <Directory /var/www/simplecam.de/static>
+            Order deny,allow
+            Allow from all
+        </Directory>
+
+        WSGIScriptAlias /app /usr/local/wsgi/sc_frontend/sc_frontend/wsgi.py process-group=app.simplecam.de
+        WSGIDaemonProcess app.simplecam.de python-path=/usr/local/wsgi/sc_frontend:/usr/local/wsgi/sc_frontend/venv/lib/python2.7/site-packages
+        WSGIProcessGroup app.simplecam.de
+
+        XSendFile on
+        XSendFilePath /var/opt/simplecam/images
+
+
+</VirtualHost>
