@@ -24,12 +24,18 @@ function set_jwt_cookie($user_login, $user) {
 	setcookie(JWT_COOKIE_NAME, $cookie, time() + 14 * DAY_IN_SECONDS, "/", JWT_COOKIE_DOMAIN, false, true);    
 }
 
+function on_user_register($userid) {
+	$user = get_userdata( $userid );
+	set_jwt_cookie($user->user_login, $user);
+}
+
 function reset_jwt_cookie() {
 	setcookie(JWT_COOKIE_NAME, '', time() - 3600, "/", JWT_COOKIE_DOMAIN);
 	setcookie(DJANGO_SESSION_COOKIE_NAME, '', time() - 3600, "/");
 }
 
 add_action('wp_login', 'set_jwt_cookie', 10, 2);
+add_action('user_register', 'on_user_register', 10, 1 );
 add_action('wp_logout', 'reset_jwt_cookie', 10, 2);
 
 ?>
