@@ -19,6 +19,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# Secret key used to calculate the password from the username
+SMTP_SECRET_KEY = 'To2PqIc8jd2X9MN0pnu1Ug2mcFhm3vs05qHQo1k8zArWU18Cg5vR3sUOw6sv'
 SECRET_KEY = '+xk8345@33(p)mx)me9vab$x98(y$-ok89ab+1wa--n=5zj1_^'
 JWT_AUTH_KEY = 'R[=F):PwK@T%.[Sm%dsp2jralpUK^2;vcOmzl_QZ*#o-H:-q4bkj?&Qyp(1[$ul-'
 
