@@ -35,6 +35,51 @@ function init_sepa_direct_debit() {
 			add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 		}
 
+		function checkIBAN($iban)
+		{
+			$iban = strtolower(str_replace(' ','',$iban));
+			$iban_lengths = array('al'=>28,'ad'=>24,'at'=>20,'az'=>28,'bh'=>22,'be'=>16,'ba'=>20,'br'=>29,'bg'=>22,'cr'=>21,'hr'=>21,
+				'cy'=>28,'cz'=>24,'dk'=>18,'do'=>28,'ee'=>20,'fo'=>18,'fi'=>18,'fr'=>27,'ge'=>22,'de'=>22,'gi'=>23,
+				'gr'=>27,'gl'=>18,'gt'=>28,'hu'=>28,'is'=>26,'ie'=>22,'il'=>23,'it'=>27,'jo'=>30,'kz'=>20,'kw'=>30,
+				'lv'=>21,'lb'=>28,'li'=>21,'lt'=>20,'lu'=>20,'mk'=>19,'mt'=>31,'mr'=>27,'mu'=>30,'mc'=>27,'md'=>24,
+				'me'=>22,'nl'=>18,'no'=>15,'pk'=>24,'ps'=>29,'pl'=>28,'pt'=>25,'qa'=>29,'ro'=>24,'sm'=>27,'sa'=>24,
+				'rs'=>22,'sk'=>24,'si'=>19,'es'=>24,'se'=>24,'ch'=>21,'tn'=>24,'tr'=>26,'ae'=>23,'gb'=>22,'vg'=>24);
+			$char_values = array('a'=>10,'b'=>11,'c'=>12,'d'=>13,'e'=>14,'f'=>15,'g'=>16,'h'=>17,'i'=>18,'j'=>19,'k'=>20,'l'=>21,'m'=>22,
+				'n'=>23,'o'=>24,'p'=>25,'q'=>26,'r'=>27,'s'=>28,'t'=>29,'u'=>30,'v'=>31,'w'=>32,'x'=>33,'y'=>34,'z'=>35);
+
+			$country_code = substr($iban, 0, 2);
+			// Does country even exist in list?
+			if (!array_key_exists($country_code, $iban_lengths))
+				return false;
+
+			if(strlen($iban) == $iban_lengths[$country_code]){
+
+				// move country prefix and checksum to the end
+				$MovedChar = substr($iban, 4).substr($iban, 0, 4);
+				$MovedCharArray = str_split($MovedChar);
+				$expanded_string = "";
+
+				// expand letters to 2 digit number strings.
+				foreach($MovedCharArray AS $key => $value){
+					if(!is_numeric($MovedCharArray[$key])){
+						$MovedCharArray[$key] = $char_values[$MovedCharArray[$key]];
+					}
+					$expanded_string .= $MovedCharArray[$key];
+				}
+
+				if(bcmod($expanded_string, '97') == 1)
+				{
+					return TRUE;
+				}
+				else{
+					return FALSE;
+				}
+			}
+			else{
+				return FALSE;
+			}
+		}
+
 		/**
 		 * Initialise Gateway Settings Form Fields
 		 */
@@ -63,7 +108,7 @@ function init_sepa_direct_debit() {
 					'title' => __('Ask for BIC', $domain),
 					'type' => 'checkbox',
 					'label' => __('Check this if your customers have to enter their BIC/Swift-Number. Some banks accept IBAN-only for domestic transactions.', $domain),
-					'default' => 'no'),
+					'default' => 'yes'),
 			);
 		}
 
@@ -98,24 +143,50 @@ function init_sepa_direct_debit() {
 
 		function payment_fields(){
 			global $domain;
+
+            wp_enqueue_script('jquery-validate', plugin_dir_url( __FILE__ ) . 'js/jquery.validate.min.js', array('jquery'), '1.10.0', true);
+            enqueue_validation_script();
+            wp_enqueue_style('sepa-dd', plugin_dir_url( __FILE__ ) . 'css/sepa-dd.css', array(), '1.0');
+
 			$fields = array(
 				'account-holder' => '<p class="form-row form-row-wide">
-				<label for="' . esc_attr( $this->id ) . '-account-holder">' . __( 'Account holder', $domain ) . ' <span class="required">*</span></label>
-				<input id="' . esc_attr( $this->id ) . '-account-holder" class="input-text" type="text" maxlength="30" autocomplete="off" placeholder="' . esc_attr__( 'John Doe', $domain ) . '" name="' . $this->id . '-account-holder' . '" />
-			</p>'
+					<label for="' . esc_attr( $this->id ) . '-account-holder">' . __( 'Account holder', $domain ) . ' <span class="required">*</span></label>
+					<input id="' . esc_attr( $this->id ) . '-account-holder" class="input-text wc-credit-card-form-card-number"
+						type="text" maxlength="30" autocomplete="off" placeholder="' . esc_attr__( 'John Doe', $domain ) . '" name="' . $this->id . '-account-holder' . '" />
+					</p>',
+				'iban' => '<p class="form-row form-row-wide">
+					<label for="' . esc_attr( $this->id ) . '-iban">' . __( 'IBAN', $domain ) . ' <span class="required">*</span></label>
+					<input id="' . esc_attr( $this->id ) . '-iban" class="input-text wc-credit-card-form-card-number"
+						type="text" maxlength="31" autocomplete="off" placeholder="' . esc_attr__( 'DE11222222223333333333', $domain ) . '" name="' . $this->id . '-iban' . '" />
+					</p>'
 			);
+			if ($this -> settings['ask_for_BIC']) {
+				$fields['bic'] = '<p class="form-row form-row-wide">
+						<label for="' . esc_attr( $this->id ) . '-bic">' . __( 'BIC', $domain ) . ' <span class="required">*</span></label>
+						<input id="' . esc_attr( $this->id ) . '-bic" class="input-text wc-credit-card-form-card-number"
+							type="text" maxlength="11" autocomplete="off" placeholder="' . esc_attr__( 'XXXXDEYYZZZ', $domain ) . '" name="' . $this->id . '-bic' . '" />
+						</p>';
+			}
+
 
 			?>
 			<fieldset id="<?php echo $this->id; ?>-cc-form">
-				<?php do_action( 'woocommerce_credit_card_form_start', $this->id ); ?>
 				<?php
 				foreach ( $fields as $field ) {
 					echo $field;
 				}
 				?>
-				<?php do_action( 'woocommerce_credit_card_form_end', $this->id ); ?>
 				<div class="clear"></div>
 			</fieldset>
+			<script>
+                jQuery(document).ready(function(){
+                    jQuery("form[name='checkout']").validate({
+					rules: {
+						"<?php echo $this->id; ?>-iban" : "iban",
+                        "<?php echo $this->id; ?>-bic" : "bic",
+					}
+				})});
+			</script>
 			<?php
 		}
 	}
@@ -124,6 +195,23 @@ function init_sepa_direct_debit() {
 		$methods[] = 'WC_Gateway_SEPA_Direct_Debit';
 		return $methods;
 	}
+
+    function enqueue_validation_script() {
+        global $domain;
+
+        // Register the script
+        wp_register_script('jquery-validate-adtl', plugin_dir_url( __FILE__ ) . 'js/additional-methods.min.js', array('jquery'), '1.10.0', true);
+
+        // Localize the script
+        $translation_array = array(
+            'invalid_iban_message' => __( 'Please enter a valid IBAN.', $domain ),
+            'invalid_bic_message' => __( 'Please enter a valid BIC.', $domain ),
+        );
+        wp_localize_script('jquery-validate-adtl', 'sepa_dd_localization', $translation_array );
+
+        // Enqueued script with localized data.
+        wp_enqueue_script('jquery-validate-adtl' );
+    }
 
 	add_filter( 'woocommerce_payment_gateways', 'add_to_payment_gateways' );
 }

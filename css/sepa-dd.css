@@ -1,0 +1,7 @@
+input.error {
+    border-color: #a00 !important;
+}
+label.error {
+    font-weight: bold;
+    color: #a00;
+}
