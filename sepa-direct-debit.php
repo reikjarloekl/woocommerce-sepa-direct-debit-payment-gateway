@@ -80,6 +80,10 @@ function init_sepa_direct_debit() {
 			}
 		}
 
+        function checkBIC($bic) {
+            return preg_match("/^([a-zA-Z]){4}([a-zA-Z]){2}([0-9a-zA-Z]){2}([0-9a-zA-Z]{3})?$/", $bic);
+        }
+
 		/**
 		 * Initialise Gateway Settings Form Fields
 		 */
@@ -168,7 +172,6 @@ function init_sepa_direct_debit() {
 						</p>';
 			}
 
-
 			?>
 			<fieldset id="<?php echo $this->id; ?>-cc-form">
 				<?php
@@ -189,6 +192,52 @@ function init_sepa_direct_debit() {
 			</script>
 			<?php
 		}
+
+        private function get_post( $name ) {
+            if( isset( $_POST[$name] ) )
+                return $_POST[$name];
+            else
+                return NULL;
+        }
+
+        function check_required_field($fieldname, $label, &$errors) {
+            $value = $this->get_post( $fieldname );
+            if( !$value )
+                $errors[] = '<strong>' . $label . '</strong> ' . __( 'is a required field.', 'woocommerce' );
+            return $value;
+        }
+
+        /**
+         * Validate Frontend Fields
+         **/
+        function validate_fields() {
+
+            global $domain, $woocommerce;
+
+            $errors = array();
+
+            $this->check_required_field($this->id . '-account-holder', __( 'Account holder', $domain ), $errors);
+            $iban = $this->check_required_field($this->id . '-iban', __( 'IBAN', $domain ), $errors);
+            if ($iban != null) {
+                if (!$this->checkIBAN($iban))
+                    $errors[] = __('Please enter a valid IBAN.', $domain);
+            }
+            if ($this -> settings['ask_for_BIC']) {
+                $bic = $this->check_required_field($this->id . '-bic', __('BIC', $domain), $errors);
+                if ($iban != null) {
+                    if (!$this->checkBIC($bic))
+                        $errors[] = __('Please enter a valid BIC.', $domain);
+                }
+            }
+
+            if( $errors ) {
+                $size = count( $errors );
+                for( $i = 0; $i < $size; $i++ )
+                    wc_add_notice( $errors[$i] , 'error');
+            } else {
+                return true;
+            }
+        }
 	}
 
 	function add_to_payment_gateways( $methods ) {
