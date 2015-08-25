@@ -121,11 +121,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         global $woocommerce, $domain;
         $order = new WC_Order($order_id);
 
-        update_post_meta( $order_id, '_sepa-dd-exported', false);
-        update_post_meta( $order_id, '_sepa-dd-account-holder', $this->get_post($this->id . '-account-holder') );
-        update_post_meta( $order_id, '_sepa-dd-iban', $this->get_post($this->id . '-iban') );
+        update_post_meta( $order_id, '_sepa_dd_exported', false);
+        update_post_meta( $order_id, '_sepa_dd_account_holder', $this->get_post($this->id . '-account-holder') );
+        update_post_meta( $order_id, '_sepa_dd_iban', $this->get_post($this->id . '-iban') );
         if ($this->settings['ask_for_BIC'])
-            update_post_meta( $order_id, '_sepa-dd-bic', $this->get_post($this->id . '-bic') );
+            update_post_meta( $order_id, '_sepa_dd_bic', $this->get_post($this->id . '-bic') );
 
         // Mark as on-hold (we're awaiting the Direct Debit)
         $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', $domain));
