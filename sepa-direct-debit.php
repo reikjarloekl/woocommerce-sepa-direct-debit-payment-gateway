@@ -210,7 +210,7 @@ function sepa_dd_export_xml_page() {
 function export_xml($orders) {
     global $domain;
     $gateway = new WC_Gateway_SEPA_Direct_Debit();
-    $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder'], true);
+    $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
     $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
 
     foreach($orders as $order) {
