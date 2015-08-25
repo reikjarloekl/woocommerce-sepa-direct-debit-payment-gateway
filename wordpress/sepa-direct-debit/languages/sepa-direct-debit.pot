@@ -1,0 +1,216 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Sepa Direct Debit\n"
+"POT-Creation-Date: 2015-08-25 22:44+0100\n"
+"PO-Revision-Date: 2015-08-25 22:44+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.1\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: sepa-direct-debit.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: WC_Gateway_SEPA_Direct_Debit.php:16 WC_Gateway_SEPA_Direct_Debit.php:93
+#: WC_Gateway_SEPA_Direct_Debit.php:133
+msgid "SEPA Direct Debit"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:17
+msgid "Creates PAIN.008 XML-files for WooCommerce payments."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:85
+msgid "Enable/Disable"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:87
+msgid "Enable SEPA Direct Debit."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:90
+msgid "Title"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:92
+msgid "This controls the title which the user sees during checkout."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:96
+msgid "Description"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:98
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:99
+msgid "Pay with SEPA direct debit."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:102
+msgid "Ask for BIC"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:104
+msgid ""
+"Check this if your customers have to enter their BIC/Swift-Number. Some "
+"banks accept IBAN-only for domestic transactions."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:107
+msgid "Target account holder"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:109
+msgid "The account holder of the account that shall receive the payments."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:112
+msgid "Target IBAN"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:114
+msgid "The IBAN of the account that shall receive the payments."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:117
+msgid "Target BIC"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:119
+msgid "The BIC of the account that shall receive the payments."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:122
+msgid "Creditor ID"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:124
+msgid "The creditor ID to be used in SEPA debits."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:151
+msgid "Awaiting SEPA direct debit completion."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:176 WC_Gateway_SEPA_Direct_Debit.php:241
+msgid "Account holder"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:178
+msgid "John Doe"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:181 WC_Gateway_SEPA_Direct_Debit.php:242
+#: sepa-direct-debit.php:105
+msgid "IBAN"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:183
+msgid "DE11222222223333333333"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:188 WC_Gateway_SEPA_Direct_Debit.php:248
+#: sepa-direct-debit.php:106
+msgid "BIC"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:190
+msgid "XXXXDEYYZZZ"
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:228
+msgid "is a required field."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:245 sepa-direct-debit.php:69
+msgid "Please enter a valid IBAN."
+msgstr ""
+
+#: WC_Gateway_SEPA_Direct_Debit.php:251 sepa-direct-debit.php:70
+msgid "Please enter a valid BIC."
+msgstr ""
+
+#: sepa-direct-debit.php:83
+msgid "SEPA XML"
+msgstr ""
+
+#: sepa-direct-debit.php:101
+msgid "Order"
+msgstr ""
+
+#: sepa-direct-debit.php:102
+msgid "Amount"
+msgstr ""
+
+#: sepa-direct-debit.php:103
+msgid "Shipping Name"
+msgstr ""
+
+#: sepa-direct-debit.php:104
+msgid "Account Holder"
+msgstr ""
+
+#: sepa-direct-debit.php:132
+msgid ""
+"For some orders, name of account holder does not match name in shipping "
+"address."
+msgstr ""
+
+#: sepa-direct-debit.php:133
+msgid "Export to SEPA XML"
+msgstr ""
+
+#: sepa-direct-debit.php:156
+msgid "SEPA XML-Files"
+msgstr ""
+
+#: sepa-direct-debit.php:157
+msgid "Please use right-click and 'save-link-as' to download the XML-files."
+msgstr ""
+
+#: sepa-direct-debit.php:170
+msgid "You do not have permission to access this page!"
+msgstr ""
+
+#: sepa-direct-debit.php:176
+msgid "Export SEPA XML"
+msgstr ""
+
+#: sepa-direct-debit.php:202
+#, php-format
+msgid "Exported %d payments to new SEPA XML: %s"
+msgstr ""
+
+#: sepa-direct-debit.php:207
+msgid "No new payments to export."
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Sepa Direct Debit"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "http://URI_Of_Page_Describing_Plugin_and_Updates"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "SEPA Direct Debit support for Woocommerce"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Joern Bungartz"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://www.bl-solutions.de"
+msgstr ""

@@ -39,6 +39,9 @@ function init_sepa_direct_debit() {
 
     require_once('WC_Gateway_SEPA_Direct_Debit.php');
 
+    global $domain;
+    load_plugin_textdomain( $domain, false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
     function get_xml_dir() {
         return md5(wp_salt() . 'sepa-dd-plugin');
     }
