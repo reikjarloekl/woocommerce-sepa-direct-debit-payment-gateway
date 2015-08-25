@@ -12,7 +12,26 @@ License: Commercial, all rights reserved.
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
+define("SEPA_DD_DIR", plugin_dir_path(__FILE__));
 $domain = 'sepa-direct-debit';
+
+spl_autoload_register(function ($className) {
+    // Make sure the class included is in this plugins namespace
+    if (substr($className, 0, 8) === "Digitick") {
+        // Remove myplugin namespace from the className
+        // Replace \ with / which works as directory separator for further namespaces
+        $classNameEscaped = str_replace("\\", "/", $className);
+        include_once SEPA_DD_DIR . "lib/$classNameEscaped.php";
+    }
+});
+
+use Digitick\Sepa\DomBuilder\CustomerCreditTransferDomBuilder;
+use Digitick\Sepa\DomBuilder\CustomerDirectDebitTransferDomBuilder;
+use Digitick\Sepa\Exception\InvalidTransferFileConfiguration;
+use Digitick\Sepa\GroupHeader;
+use Digitick\Sepa\PaymentInformation;
+use Digitick\Sepa\TransferFile\CustomerDirectDebitTransferFile;
+use Digitick\Sepa\TransferInformation\CustomerDirectDebitTransferInformation;
 
 function init_sepa_direct_debit() {
 
@@ -76,6 +95,7 @@ function sepa_dd_export_xml_page() {
     $count = count($to_be_exported);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        export_xml();
         echo '<div class="updated"><p>'.sprintf(__("Exported %d payments to new SEPA XML: ", $domain), $count).'</p></div>';
     } else {
         if ($to_be_exported) { ?>
@@ -120,6 +140,27 @@ function sepa_dd_export_xml_page() {
         }
     }
 
+}
+
+function export_xml() {
+    $groupHeader = new GroupHeader('transferID', 'Me');
+    $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
+    $transfer = new CustomerDirectDebitTransferInformation('0.02', 'FI1350001540000056', 'Their Corp');
+    $transfer->setBic('OKOYFIHH');
+    $transfer->setMandateSignDate(new \DateTime('16.08.2013'));
+    $transfer->setMandateId('ABCDE');
+    $transfer->setRemittanceInformation('Transaction Description');
+    $payment = new PaymentInformation('Payment Info ID', 'FR1420041010050500013M02606', 'PSSTFRPPMON', 'My Corp');
+    $payment->setSequenceType(PaymentInformation::S_ONEOFF);
+    $payment->setDueDate(new \DateTime('22.08.2013'));
+    $payment->setCreditorId('DE21WVM1234567890');
+    $payment->addTransfer($transfer);
+    $sepaFile->addPaymentInformation($payment);
+    $domBuilder = new CustomerDirectDebitTransferDomBuilder();
+    $sepaFile->accept($domBuilder);
+    $xml = $domBuilder->asXml();
+    $upload_dir = wp_upload_dir();
+    file_put_contents($upload_dir['path'] . "/sepa-export.xml", $xml);
 }
 
 add_action( 'admin_menu', 'register_sepa_xml_page');
