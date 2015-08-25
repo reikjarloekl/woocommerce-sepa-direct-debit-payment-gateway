@@ -5,3 +5,6 @@ label.error {
     font-weight: bold;
     color: #a00;
 }
+tr.suspicious {
+    background:#FF9696 !important;
+}

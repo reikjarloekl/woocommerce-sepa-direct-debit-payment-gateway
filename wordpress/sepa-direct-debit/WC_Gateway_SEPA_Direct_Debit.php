@@ -103,6 +103,26 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'checkbox',
                 'label' => __('Check this if your customers have to enter their BIC/Swift-Number. Some banks accept IBAN-only for domestic transactions.', $domain),
                 'default' => 'yes'),
+            'target_account_holder' => array(
+                'title' => __('Target account holder', $domain),
+                'type' => 'text',
+                'description' => __('The account holder of the account that shall receive the payments.', $domain),
+            ),
+            'target_iban' => array(
+                'title' => __('Target IBAN', $domain),
+                'type' => 'text',
+                'description' => __('The IBAN of the account that shall receive the payments.', $domain),
+            ),
+            'target_bic' => array(
+                'title' => __('Target BIC', $domain),
+                'type' => 'text',
+                'description' => __('The BIC of the account that shall receive the payments.', $domain),
+            ),
+            'creditor_id' => array(
+                'title' => __('Creditor ID', $domain),
+                'type' => 'text',
+                'description' => __('The creditor ID to be used in SEPA debits.', $domain),
+            ),
         );
     }
 
@@ -214,7 +234,6 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      **/
     function validate_fields()
     {
-
         global $domain, $woocommerce;
 
         $errors = array();
