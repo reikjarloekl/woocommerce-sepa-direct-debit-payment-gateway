@@ -2,9 +2,9 @@
 
 /*
 Plugin Name: Sepa Direct Debit
-Plugin URI: http://URI_Of_Page_Describing_Plugin_and_Updates
+Plugin URI: http://envato-uri-goes-here
 Description: SEPA Direct Debit support for Woocommerce
-Version: 1.0
+Version: 1.1
 Author: Joern Bungartz
 Author URI: http://www.bl-solutions.de
 License: Commercial, all rights reserved.

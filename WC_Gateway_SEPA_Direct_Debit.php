@@ -20,6 +20,10 @@ spl_autoload_register(function ($className) {
     }
 });
 
+/**
+ * Uses the php-sepa-xml library 1.0.0 licensed under LGPL 1.0
+ * https://github.com/php-sepa-xml/php-sepa-xml
+ */
 use Digitick\Sepa\DomBuilder\CustomerCreditTransferDomBuilder;
 use Digitick\Sepa\DomBuilder\CustomerDirectDebitTransferDomBuilder;
 use Digitick\Sepa\Exception\InvalidTransferFileConfiguration;
@@ -42,6 +46,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
     const PAYMENT_METHOD = '_payment_method';
 
+    /**
+     * C'tor, registering with WooCommerce.
+     */
     function __construct()
     {
         $this->id = self::GATEWAY_ID;
@@ -70,8 +77,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
     }
 
+    /**
+     * Initializes actions and filters; load translation files.
+     */
     public static function init() {
-        load_plugin_textdomain( self::DOMAIN, false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+        load_plugin_textdomain( 'sepa-direct-debit', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
         add_action( 'scheduled_subscription_payment_' . self::GATEWAY_ID,  __CLASS__ . '::scheduled_subscription_payment', 10, 3);
         add_filter( 'woocommerce_payment_gateways', __CLASS__ . '::add_to_payment_gateways' );
@@ -81,10 +91,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
     }
 
+    /**
+     * Register WooCommerce-Settings page "SEPA XML"
+     */
     public static function register_sepa_xml_page() {
         add_submenu_page( 'woocommerce', __("SEPA XML", self::DOMAIN), __("SEPA XML", self::DOMAIN), 'manage_options', 'sepa-dd-export-xml', __CLASS__ . '::sepa_dd_export_xml_page' );
     }
 
+    /**
+     * Action method to register payment gateway with WooCommerce.
+     *
+     * @param $methods
+     * @return array
+     */
     public static function add_to_payment_gateways( $methods ) {
         $methods[] = 'WC_Gateway_SEPA_Direct_Debit';
         return $methods;
