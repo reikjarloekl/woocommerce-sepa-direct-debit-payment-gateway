@@ -336,6 +336,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $payment->setSequenceType(PaymentInformation::S_ONEOFF);
             $payment->setDueDate(new \DateTime());
             $payment->setCreditorId($gateway->settings['creditor_id']);
+            $payment->setLocalInstrumentCode('COR1');
             $payment->addTransfer($transfer);
             $sepaFile->addPaymentInformation($payment);
         }
@@ -464,6 +465,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
     /**
+     * Returns, if BIC is required
+     */
+    function askForBIC() {
+        return isset( $this->settings['ask_for_BIC'] ) && ($this->settings['ask_for_BIC'] == 'yes');
+    }
+
+    /**
      * Output payment gateway options.
      */
     function admin_options()
@@ -489,7 +497,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         update_post_meta( $order_id, self::SEPA_DD_EXPORTED, false);
         update_post_meta( $order_id, self::SEPA_DD_ACCOUNT_HOLDER, $this->get_post($this->id . '-account-holder') );
         update_post_meta( $order_id, self::SEPA_DD_IBAN, $this->get_post($this->id . '-iban') );
-        if ($this->settings['ask_for_BIC'])
+        if ($this->askForBIC())
             update_post_meta( $order_id, self::SEPA_DD_BIC, $this->get_post($this->id . '-bic') );
 
         // Mark as on-hold (we're awaiting the Direct Debit)
@@ -549,7 +557,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 						type="text" maxlength="31" autocomplete="off" placeholder="' . esc_attr__('DE11222222223333333333', self::DOMAIN) . '" name="' . $this->id . '-iban' . '" />
 					</p>'
         );
-        if ($this->settings['ask_for_BIC']) {
+        if ($this->askForBIC()) {
             $fields['bic'] = '<p class="form-row form-row-wide">
 						<label for="' . esc_attr($this->id) . '-bic">' . __('BIC', self::DOMAIN) . ' <span class="required">*</span></label>
 						<input id="' . esc_attr($this->id) . '-bic" class="input-text wc-credit-card-form-card-number"
@@ -622,7 +630,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             if (!$this->checkIBAN($iban))
                 $errors[] = __('Please enter a valid IBAN.', self::DOMAIN);
         }
-        if ($this->settings['ask_for_BIC']) {
+        if ($this->askForBIC()) {
             $bic = $this->check_required_field($this->id . '-bic', __('BIC', self::DOMAIN), $errors);
             if ($iban != null) {
                 if (!$this->checkBIC($bic))
