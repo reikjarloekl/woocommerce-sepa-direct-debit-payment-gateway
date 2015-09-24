@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Sepa Direct Debit\n"
-"POT-Creation-Date: 2015-08-27 07:53+0100\n"
-"PO-Revision-Date: 2015-08-27 07:54+0100\n"
+"POT-Creation-Date: 2015-09-24 23:23+0100\n"
+"PO-Revision-Date: 2015-09-24 23:27+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -20,46 +20,46 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:62 WC_Gateway_SEPA_Direct_Debit.php:417
-#: WC_Gateway_SEPA_Direct_Debit.php:459
+#: WC_Gateway_SEPA_Direct_Debit.php:66 WC_Gateway_SEPA_Direct_Debit.php:448
+#: WC_Gateway_SEPA_Direct_Debit.php:497
 msgid "SEPA Direct Debit"
 msgstr "SEPA-Lastschrift"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:63
+#: WC_Gateway_SEPA_Direct_Debit.php:67
 msgid "Creates PAIN.008 XML-files for WooCommerce payments."
 msgstr "Erstellt PAIN.008 XML-Dateien für WooCommerce Zahlungen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:91
+#: WC_Gateway_SEPA_Direct_Debit.php:98
 msgid "SEPA XML"
 msgstr "SEPA XML"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:181
+#: WC_Gateway_SEPA_Direct_Debit.php:194
 msgid "Order"
 msgstr "Bestellung"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:182
+#: WC_Gateway_SEPA_Direct_Debit.php:195
 msgid "Amount"
 msgstr "Betrag"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:183
+#: WC_Gateway_SEPA_Direct_Debit.php:196
 msgid "Shipping Name"
 msgstr "Name (Versandadresse)"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:184
+#: WC_Gateway_SEPA_Direct_Debit.php:197
 msgid "Account Holder"
 msgstr "Kontoinhaber"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:185 WC_Gateway_SEPA_Direct_Debit.php:534
-#: WC_Gateway_SEPA_Direct_Debit.php:607
+#: WC_Gateway_SEPA_Direct_Debit.php:198 WC_Gateway_SEPA_Direct_Debit.php:572
+#: WC_Gateway_SEPA_Direct_Debit.php:645
 msgid "IBAN"
 msgstr "IBAN"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:186 WC_Gateway_SEPA_Direct_Debit.php:541
-#: WC_Gateway_SEPA_Direct_Debit.php:613
+#: WC_Gateway_SEPA_Direct_Debit.php:199 WC_Gateway_SEPA_Direct_Debit.php:579
+#: WC_Gateway_SEPA_Direct_Debit.php:651
 msgid "BIC"
 msgstr "BIC"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:212
+#: WC_Gateway_SEPA_Direct_Debit.php:225
 msgid ""
 "For some orders, name of account holder does not match name in shipping "
 "address."
@@ -67,74 +67,82 @@ msgstr ""
 "Für einige Bestellungen entspricht der Name des Kontoinhabers nicht dem "
 "Namen in der Versand-Adresse."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:213
+#: WC_Gateway_SEPA_Direct_Debit.php:233 WC_Gateway_SEPA_Direct_Debit.php:236
 msgid "Export to SEPA XML"
 msgstr "Nach SEPA XML exportieren"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:244
+#: WC_Gateway_SEPA_Direct_Debit.php:235
+msgid ""
+"Please setup the payment target information first in WooCommerce/Settings/"
+"Checkout/SEPA Direct Debit."
+msgstr ""
+"Bitte geben Sie erst die Informationen zum Zahlungsziel ein unter "
+"WooCommerce/Einstellungen/Kasse/SEPA Lastschrift."
+
+#: WC_Gateway_SEPA_Direct_Debit.php:268
 msgid "SEPA XML-Files"
 msgstr "SEPA XML-Dateien"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:245
+#: WC_Gateway_SEPA_Direct_Debit.php:269
 msgid "Please use right-click and 'save-link-as' to download the XML-files."
 msgstr ""
 "Bitte klicken Sie mit der rechten Maustaste und \"Speichern-Link unter\", um "
 "die XML-Dateien herunterladen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:260
+#: WC_Gateway_SEPA_Direct_Debit.php:284
 msgid "You do not have permission to access this page!"
 msgstr "Sie sind nicht befugt, auf diese Seite zuzugreifen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:266
+#: WC_Gateway_SEPA_Direct_Debit.php:290
 msgid "Export SEPA XML"
 msgstr "SEPA XML exportieren"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:292
+#: WC_Gateway_SEPA_Direct_Debit.php:316
 #, php-format
 msgid "Exported %d payments to new SEPA XML: %s"
 msgstr "%d Zahlungen in neues SEPA XML exportiert: %s"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:297
+#: WC_Gateway_SEPA_Direct_Debit.php:321
 msgid "No new payments to export."
 msgstr "Keine neuen Zahlungen zum Export."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:409
+#: WC_Gateway_SEPA_Direct_Debit.php:440
 msgid "Enable/Disable"
 msgstr "Aktivieren/Deaktivieren"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:411
+#: WC_Gateway_SEPA_Direct_Debit.php:442
 msgid "Enable SEPA Direct Debit."
 msgstr "SEPA-Lastschrift aktivieren."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:414
+#: WC_Gateway_SEPA_Direct_Debit.php:445
 msgid "Title"
 msgstr "Titel"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:416
+#: WC_Gateway_SEPA_Direct_Debit.php:447
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 "Hier können Sie den Titel eingeben den der Benutzer während des Checkouts "
 "sieht."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:420
+#: WC_Gateway_SEPA_Direct_Debit.php:451
 msgid "Description"
 msgstr "Beschreibung"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:422
+#: WC_Gateway_SEPA_Direct_Debit.php:453
 msgid "This controls the description which the user sees during checkout."
 msgstr ""
 "Hier können Sie die Beschreibung eingeben den der Benutzer während des "
 "Checkouts sieht."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:423
+#: WC_Gateway_SEPA_Direct_Debit.php:454
 msgid "Pay with SEPA direct debit."
 msgstr "Per SEPA-Lastschrift bezahlen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:426
+#: WC_Gateway_SEPA_Direct_Debit.php:457
 msgid "Ask for BIC"
 msgstr "Nach BIC fragen"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:428
+#: WC_Gateway_SEPA_Direct_Debit.php:459
 msgid ""
 "Check this if your customers have to enter their BIC/Swift-Number. Some "
 "banks accept IBAN-only for domestic transactions."
@@ -143,69 +151,69 @@ msgstr ""
 "Einige Banken akzeptieren Lastschriften mit nur der IBAN für "
 "Inlandsüberweisungen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:431
+#: WC_Gateway_SEPA_Direct_Debit.php:462
 msgid "Target account holder"
 msgstr "Ziel-Kontoinhaber"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:433
+#: WC_Gateway_SEPA_Direct_Debit.php:464
 msgid "The account holder of the account that shall receive the payments."
 msgstr "Der Kontoinhaber des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:436
+#: WC_Gateway_SEPA_Direct_Debit.php:467
 msgid "Target IBAN"
 msgstr "Ziel IBAN"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:438
+#: WC_Gateway_SEPA_Direct_Debit.php:469
 msgid "The IBAN of the account that shall receive the payments."
 msgstr "Die IBAN-Nummer des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:441
+#: WC_Gateway_SEPA_Direct_Debit.php:472
 msgid "Target BIC"
 msgstr "Ziel BIC"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:443
+#: WC_Gateway_SEPA_Direct_Debit.php:474
 msgid "The BIC of the account that shall receive the payments."
 msgstr "Die IBAN-Nummer des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:446
+#: WC_Gateway_SEPA_Direct_Debit.php:477
 msgid "Creditor ID"
 msgstr "Gläubiger ID"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:448
+#: WC_Gateway_SEPA_Direct_Debit.php:479
 msgid "The creditor ID to be used in SEPA debits."
 msgstr ""
 "Die Gläubiger ID, die für SEPA-Lastschriften verwendet wird. Wird in "
 "Deutschland von der Bundesbank vergeben."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:483
+#: WC_Gateway_SEPA_Direct_Debit.php:521
 msgid "Awaiting SEPA direct debit completion."
 msgstr "Warten auf die Fertigstellung der SEPA-Lastschrift."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:510 WC_Gateway_SEPA_Direct_Debit.php:610
+#: WC_Gateway_SEPA_Direct_Debit.php:548 WC_Gateway_SEPA_Direct_Debit.php:648
 msgid "Please enter a valid IBAN."
 msgstr "Bitte geben Sie eine gültige IBAN ein."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:511 WC_Gateway_SEPA_Direct_Debit.php:616
+#: WC_Gateway_SEPA_Direct_Debit.php:549 WC_Gateway_SEPA_Direct_Debit.php:654
 msgid "Please enter a valid BIC."
 msgstr "Bitte geben Sie eine gültige BIC ein."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:529 WC_Gateway_SEPA_Direct_Debit.php:606
+#: WC_Gateway_SEPA_Direct_Debit.php:567 WC_Gateway_SEPA_Direct_Debit.php:644
 msgid "Account holder"
 msgstr "Kontoinhaber"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:531
+#: WC_Gateway_SEPA_Direct_Debit.php:569
 msgid "John Doe"
 msgstr "Max Mustermann"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:536
+#: WC_Gateway_SEPA_Direct_Debit.php:574
 msgid "DE11222222223333333333"
 msgstr "DE11222222223333333333"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:543
+#: WC_Gateway_SEPA_Direct_Debit.php:581
 msgid "XXXXDEYYZZZ"
 msgstr "XXXXDEYYZZZ"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:594
+#: WC_Gateway_SEPA_Direct_Debit.php:632
 msgid "is a required field."
 msgstr "ist ein Pflichtfeld"
 
@@ -214,8 +222,10 @@ msgid "Sepa Direct Debit"
 msgstr "SEPA-Lastschrift"
 
 #. Plugin URI of the plugin/theme
-msgid "http://envato-uri-goes-here"
+msgid ""
+"http://codecanyon.net/item/sepa-payment-gateway-for-woocommerce/12664657"
 msgstr ""
+"http://codecanyon.net/item/sepa-payment-gateway-for-woocommerce/12664657"
 
 #. Description of the plugin/theme
 msgid "SEPA Direct Debit support for Woocommerce"

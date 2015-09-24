@@ -223,7 +223,18 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         echo '</tbody></table>';
         if (!$all_names_match)
             echo '<div class="error"><p>' . __("For some orders, name of account holder does not match name in shipping address.", self::DOMAIN) . '</p></div>';
-        echo '<form method="post" action=""><p class="submit"><input class="button-primary" type="submit" value="'.__("Export to SEPA XML", self::DOMAIN).'"></p></form>';
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        $all_target_info_set =
+            !empty($gateway->settings['target_bic'])
+            && !empty($gateway->settings['target_iban'])
+            && !empty($gateway->settings['target_account_holder'])
+            && !empty($gateway->settings['creditor_id']);
+        if ($all_target_info_set) {
+            echo '<form method="post" action=""><p class="submit"><input class="button-primary" type="submit" value="' . __("Export to SEPA XML", self::DOMAIN) . '"></p></form>';
+        } else {
+            echo '<div class="error"><p>' . __("Please setup the payment target information first in WooCommerce/Settings/Checkout/SEPA Direct Debit.", self::DOMAIN) . '</p></div>';
+            echo '<p class="submit"><input class="button-primary" type="submit" disabled value="' . __("Export to SEPA XML", self::DOMAIN) . '"></p>';
+        }
     }
 
     /**
@@ -333,7 +344,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $transfer->setMandateId($order->ID);
             $transfer->setRemittanceInformation(__(sprintf('Order %d', $order->ID), self::DOMAIN));
             $payment = new PaymentInformation($order->ID, $gateway->settings['target_iban'], $gateway->settings['target_bic'], $gateway->settings['target_account_holder']);
-            $payment->setSequenceType(PaymentInformation::S_ONEOFF);
+            if (WC_Subscriptions_Renewal_Order::is_renewal( $order->ID )) {
+                $payment->setSequenceType(PaymentInformation::S_RECURRING);
+            } else if (WC_Subscriptions_Order::order_contains_subscription( $order->ID )) {
+                $payment->setSequenceType(PaymentInformation::S_FIRST);
+            } else {
+                $payment->setSequenceType(PaymentInformation::S_ONEOFF);
+            }
             $payment->setDueDate(new \DateTime());
             $payment->setCreditorId($gateway->settings['creditor_id']);
             $payment->setLocalInstrumentCode('COR1');
