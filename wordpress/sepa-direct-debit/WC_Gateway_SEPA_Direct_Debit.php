@@ -265,6 +265,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $upload_dir = wp_upload_dir();
         $base_url = $upload_dir['baseurl'];
         $ffs = self::sorted_dir(self::get_xml_path());
+        if (empty($ffs)) return;
         echo '<h3>'. __("SEPA XML-Files", self::DOMAIN) . '</h3>';
         echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
         echo '<ul>';
