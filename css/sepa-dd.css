@@ -8,3 +8,10 @@ label.error {
 tr.suspicious {
     background:#FF9696 !important;
 }
+
+input.sepa-direct-debit-payment-field {
+    font-size: 1.5em;
+    padding: 8px;
+    background-repeat: no-repeat;
+    background-position: right
+}
