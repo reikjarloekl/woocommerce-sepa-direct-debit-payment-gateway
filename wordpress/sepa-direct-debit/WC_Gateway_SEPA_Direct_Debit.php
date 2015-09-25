@@ -566,19 +566,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $fields = array(
             'account-holder' => '<p class="form-row form-row-wide">
 					<label for="' . esc_attr($this->id) . '-account-holder">' . __('Account holder', self::DOMAIN) . ' <span class="required">*</span></label>
-					<input id="' . esc_attr($this->id) . '-account-holder" class="input-text wc-credit-card-form-card-number"
+					<input id="' . esc_attr($this->id) . '-account-holder" class="input-text sepa-direct-debit-payment-field"
 						type="text" maxlength="30" autocomplete="off" placeholder="' . esc_attr__('John Doe', self::DOMAIN) . '" name="' . $this->id . '-account-holder' . '" />
 					</p>',
             'iban' => '<p class="form-row form-row-wide">
 					<label for="' . esc_attr($this->id) . '-iban">' . __('IBAN', self::DOMAIN) . ' <span class="required">*</span></label>
-					<input id="' . esc_attr($this->id) . '-iban" class="input-text wc-credit-card-form-card-number"
+					<input id="' . esc_attr($this->id) . '-iban" class="input-text sepa-direct-debit-payment-field"
 						type="text" maxlength="31" autocomplete="off" placeholder="' . esc_attr__('DE11222222223333333333', self::DOMAIN) . '" name="' . $this->id . '-iban' . '" />
 					</p>'
         );
         if ($this->askForBIC()) {
             $fields['bic'] = '<p class="form-row form-row-wide">
 						<label for="' . esc_attr($this->id) . '-bic">' . __('BIC', self::DOMAIN) . ' <span class="required">*</span></label>
-						<input id="' . esc_attr($this->id) . '-bic" class="input-text wc-credit-card-form-card-number"
+						<input id="' . esc_attr($this->id) . '-bic" class="input-text sepa-direct-debit-payment-field"
 							type="text" maxlength="11" autocomplete="off" placeholder="' . esc_attr__('XXXXDEYYZZZ', self::DOMAIN) . '" name="' . $this->id . '-bic' . '" />
 						</p>';
         }
