@@ -156,13 +156,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
     /**
      * Returns the full path within wp-upload to export SEPA-XML-files to.
-     *
      * @return string The full output path.
+     * @throws Exception in case, output path could not be created.
      */
     private static function get_xml_path() {
         $upload_dir = wp_upload_dir();
         $target_dir = $upload_dir['basedir'] . '/' . self::get_xml_dir();
-        wp_mkdir_p( $target_dir );
+        if (false === wp_mkdir_p( $target_dir )) {
+            throw new Exception(__(sprintf('Could not create output path %s', $target_dir)));
+        }
         return $target_dir;
     }
 
@@ -277,59 +279,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
     /**
-     * Output the WooCommerce Settings page to list outstanding orders and previously generated SEPA-XML-files.
-     */
-    public static function sepa_dd_export_xml_page() {
-
-        if (!current_user_can('manage_options')) {
-            wp_die(__("You do not have permission to access this page!", self::DOMAIN));
-        }
-
-        wp_enqueue_style('sepa-dd', plugin_dir_url(__FILE__) . 'css/sepa-dd.css', array(), '1.0');
-
-        echo '<div class="wrap"><div id="icon-tools" class="icon32"></div>';
-        echo '<h2>'.__("Export SEPA XML", self::DOMAIN).'</h2>';
-        echo '</div>';
-
-        $query = array(
-            'numberposts' => -1,
-            'post_type' => 'shop_order',
-            'post_status' => array_keys( wc_get_order_statuses() ),
-            'meta_query' => array(
-                array(
-                    'key' => self::PAYMENT_METHOD,
-                    'value' => 'sepa-direct-debit',
-                ),
-                array(
-                    'key' => '_sepa_dd_exported',
-                    'value' => false,
-                ),
-            ),
-        );
-        $to_be_exported = get_posts($query);
-        $count = count($to_be_exported);
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $filename = self::export_xml($to_be_exported);
-            foreach($to_be_exported as $order) {
-                update_post_meta($order->ID, '_sepa_dd_exported', true);
-            }
-            echo '<div class="updated"><p>'.sprintf(__("Exported %d payments to new SEPA XML: %s", self::DOMAIN), $count, $filename).'</p></div>';
-        } else {
-            if ($to_be_exported) {
-                self::output_orders_to_be_exported($to_be_exported);
-            } else {
-                echo '<div class="notice"><p>'.__("No new payments to export.", self::DOMAIN).'</p></div>';
-            }
-        }
-        self::list_xml_files();
-    }
-
-    /**
      * Export the given orders into a PAIN.008.003.02 XML-file.
      *
      * @param $orders The orders to export.
      * @return string The filename of the generated XML-file.
+     * @throws Exception in case output file cannot be created.
      */
     private static function export_xml($orders) {
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
@@ -363,8 +317,66 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $xml = $domBuilder->asXml();
         $now = new DateTime();
         $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
-        file_put_contents(self::get_xml_path() . "/" . $filename, $xml);
+        if (false === file_put_contents(self::get_xml_path() . "/asdsad/" . $filename, $xml)) {
+            throw new Exception(__(sprintf('Could not create output file %s', $filename)));
+        }
         return $filename;
+    }
+
+    /**
+     * Output the WooCommerce Settings page to list outstanding orders and previously generated SEPA-XML-files.
+     */
+    public static function sepa_dd_export_xml_page()
+    {
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__("You do not have permission to access this page!", self::DOMAIN));
+        }
+
+        wp_enqueue_style('sepa-dd', plugin_dir_url(__FILE__) . 'css/sepa-dd.css', array(), '1.0');
+
+        echo '<div class="wrap"><div id="icon-tools" class="icon32"></div>';
+        echo '<h2>' . __("Export SEPA XML", self::DOMAIN) . '</h2>';
+        echo '</div>';
+
+
+        try {
+            $query = array(
+                'numberposts' => -1,
+                'post_type' => 'shop_order',
+                'post_status' => array_keys(wc_get_order_statuses()),
+                'meta_query' => array(
+                    array(
+                        'key' => self::PAYMENT_METHOD,
+                        'value' => 'sepa-direct-debit',
+                    ),
+                    array(
+                        'key' => '_sepa_dd_exported',
+                        'value' => false,
+                    ),
+                ),
+            );
+            $to_be_exported = get_posts($query);
+            $count = count($to_be_exported);
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $filename = self::export_xml($to_be_exported);
+                foreach ($to_be_exported as $order) {
+                    update_post_meta($order->ID, '_sepa_dd_exported', true);
+                }
+                echo '<div class="updated"><p>' . sprintf(__("Exported %d payments to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
+            } else {
+                if ($to_be_exported) {
+                    self::output_orders_to_be_exported($to_be_exported);
+                } else {
+                    echo '<div class="notice"><p>' . __("No new payments to export.", self::DOMAIN) . '</p></div>';
+                }
+            }
+            self::list_xml_files();
+        } catch (Exception $e) {
+            $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
+            echo "<div class=\"error notice\"><p>$msg</p></div>";
+        }
     }
 
     /**
@@ -540,6 +552,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function enqueue_validation_script() {
 
         wp_enqueue_script('jquery-validate', plugin_dir_url(__FILE__) . 'js/jquery.validate.min.js', array('jquery'), '1.10.0', true);
+        wp_enqueue_script('sepa-dd', plugin_dir_url(__FILE__) . 'js/sepa-dd.js', array('jquery'), '1.10.0', true);
 
         // Register the script
         wp_register_script('jquery-validate-adtl', plugin_dir_url( __FILE__ ) . 'js/additional-methods.min.js', array('jquery'), '1.10.0', true);
@@ -592,16 +605,6 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             ?>
             <div class="clear"></div>
         </fieldset>
-        <script>
-            jQuery(document).ready(function () {
-                jQuery("form[name='checkout']").validate({
-                    rules: {
-                        "<?php echo $this->id; ?>-iban": "iban",
-                        "<?php echo $this->id; ?>-bic": "bic",
-                    }
-                })
-            });
-        </script>
         <?php
     }
 
