@@ -299,12 +299,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $transfer->setMandateId($order->ID);
             $transfer->setRemittanceInformation(__(sprintf('Order %d', $order->ID), self::DOMAIN));
             $payment = new PaymentInformation($order->ID, $gateway->settings['target_iban'], $gateway->settings['target_bic'], $gateway->settings['target_account_holder']);
-            if (WC_Subscriptions_Renewal_Order::is_renewal( $order->ID )) {
-                $payment->setSequenceType(PaymentInformation::S_RECURRING);
-            } else if (WC_Subscriptions_Order::order_contains_subscription( $order->ID )) {
-                $payment->setSequenceType(PaymentInformation::S_FIRST);
-            } else {
-                $payment->setSequenceType(PaymentInformation::S_ONEOFF);
+            $payment->setSequenceType(PaymentInformation::S_ONEOFF);
+            if (class_exists('WC_Subscriptions_Renewal_Order')) {
+                if (WC_Subscriptions_Renewal_Order::is_renewal($order->ID)) {
+                    $payment->setSequenceType(PaymentInformation::S_RECURRING);
+                } else if (WC_Subscriptions_Order::order_contains_subscription($order->ID)) {
+                    $payment->setSequenceType(PaymentInformation::S_FIRST);
+                }
             }
             $payment->setDueDate(new \DateTime());
             $payment->setCreditorId($gateway->settings['creditor_id']);
@@ -317,7 +318,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $xml = $domBuilder->asXml();
         $now = new DateTime();
         $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
-        if (false === file_put_contents(self::get_xml_path() . "/asdsad/" . $filename, $xml)) {
+        if (false === file_put_contents(self::get_xml_path() . "/" . $filename, $xml)) {
             throw new Exception(__(sprintf('Could not create output file %s', $filename)));
         }
         return $filename;
