@@ -577,6 +577,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     {
         self::enqueue_validation_script();
 
+        if ( $this->description ) {
+            echo wpautop( wptexturize( trim( $this->description ) ) );
+        }
+
         $fields = array(
             'account-holder' => '<p class="form-row form-row-wide">
 					<label for="' . esc_attr($this->id) . '-account-holder">' . __('Account holder', self::DOMAIN) . ' <span class="required">*</span></label>
