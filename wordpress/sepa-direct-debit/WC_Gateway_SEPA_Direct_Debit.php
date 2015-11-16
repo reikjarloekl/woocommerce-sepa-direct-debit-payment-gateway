@@ -89,6 +89,47 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         add_filter( 'woocommerce_subscriptions_renewal_order_meta_query', __CLASS__ . '::remove_renewal_order_meta', 10, 4 );
         add_filter( 'woocommerce_subscriptions_renewal_order_meta', __CLASS__ . '::add_exported_to_renewal_order_meta', 10, 4 );
 
+        add_action( 'add_meta_boxes', __CLASS__ . '::sepa_dd_add_meta_box' );
+
+    }
+
+    // Add a meta box to the order page to show IBAN and BIC.
+    public static function sepa_dd_add_meta_box()
+    {
+        global $post;
+
+        if(empty($post) || (!get_post_meta($post->ID, self::SEPA_DD_ACCOUNT_HOLDER, true)))
+                return;
+
+        add_meta_box(
+            self::GATEWAY_ID,
+            __('SEPA Direct Debit', self::DOMAIN),
+            __CLASS__ . '::sepa_dd_meta_box_callback',
+            'shop_order',
+            'side'
+        );
+    }
+
+    /**
+     * Prints the meta box on the order page showing IBAN and BIC.
+     *
+     * @param WP_Post $post The object for the current post/page.
+     */
+    public static function sepa_dd_meta_box_callback( $post ) {
+
+        $info = WC_Gateway_SEPA_Direct_Debit::get_payment_info($post);
+
+        echo "<p>";
+        _e('Account holder', self::DOMAIN);
+        echo ": " . $info['account_holder'] . "</p>";
+
+        echo "<p>";
+        _e('IBAN', self::DOMAIN);
+        echo ": " . $info['iban'] . "</p>";
+
+        echo "<p>";
+        _e('BIC', self::DOMAIN);
+        echo ": " . $info['bic'] . "</p>";
     }
 
     /**
