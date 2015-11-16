@@ -555,6 +555,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         </table> <?php
     }
 
+    function remove_white_space($string) {
+        return preg_replace('/\s+/', '', $string);
+    }
+
     /**
      * Process the payment for the order.
      *
@@ -568,9 +572,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         update_post_meta( $order_id, self::SEPA_DD_EXPORTED, false);
         update_post_meta( $order_id, self::SEPA_DD_ACCOUNT_HOLDER, $this->get_post($this->id . '-account-holder') );
-        update_post_meta( $order_id, self::SEPA_DD_IBAN, $this->get_post($this->id . '-iban') );
+        update_post_meta( $order_id, self::SEPA_DD_IBAN, $this->remove_white_space($this->get_post($this->id . '-iban')) );
         if ($this->askForBIC())
-            update_post_meta( $order_id, self::SEPA_DD_BIC, $this->get_post($this->id . '-bic') );
+            update_post_meta( $order_id, self::SEPA_DD_BIC, $this->remove_white_space($this->get_post($this->id . '-bic')) );
 
         // Mark as on-hold (we're awaiting the Direct Debit)
         $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
