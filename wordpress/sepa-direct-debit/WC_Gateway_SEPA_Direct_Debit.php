@@ -220,7 +220,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function get_payment_info($post) {
         $result = array();
         $result['account_holder'] = get_post_meta($post->ID, self::SEPA_DD_ACCOUNT_HOLDER, true);
-        $result['total'] = floatval(get_post_meta($post->ID, self::ORDER_TOTAL, true));
+        $result['total'] = get_post_meta($post->ID, self::ORDER_TOTAL, true);
         $result['iban'] = get_post_meta($post->ID, self::SEPA_DD_IBAN, true);
         $result['bic'] = get_post_meta($post->ID, self::SEPA_DD_BIC, true);
         return $result;
@@ -335,7 +335,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         foreach($orders as $order) {
             $payment_info = self::get_payment_info($order);
-            $transfer = new CustomerDirectDebitTransferInformation($payment_info['total'], $payment_info['iban'], $payment_info['account_holder']);
+            $parts = preg_split('/\./', $payment_info['total']);
+            $amount = strval($parts[0]) * 100 + strval($parts[1]);
+            $transfer = new CustomerDirectDebitTransferInformation($amount, $payment_info['iban'], $payment_info['account_holder']);
             if ($payment_info['bic'])
                 $transfer->setBic($payment_info['bic']);
             $transfer->setMandateSignDate(new \DateTime($order->post_date));
