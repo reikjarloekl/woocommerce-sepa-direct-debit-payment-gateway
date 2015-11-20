@@ -356,7 +356,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
             $payment->setDueDate(new \DateTime());
             $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
-            $payment->setLocalInstrumentCode('COR1');
+            $cor1_enabled = $gateway->settings['export_as_COR1'];
+            $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
             $payment->addTransfer($transfer);
             $sepaFile->addPaymentInformation($payment);
         }
@@ -481,6 +482,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'text',
                 'description' => __('The creditor ID to be used in SEPA debits.', self::DOMAIN),
             ),
+            'export_as_COR1' => array(
+                'title' => __('Export payments as express debits (COR1)', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Check this to export debits as express or COR1 debits. This reduces the debit delay from 5 to 1 business day but is not supported by all banks. Please check with your bank before enabling this setting.', self::DOMAIN),
+                'default' => 'no'),
         );
     }
 
