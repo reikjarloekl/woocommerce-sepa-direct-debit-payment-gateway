@@ -343,7 +343,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $transfer->setMandateSignDate(new \DateTime($order->post_date));
             $transfer->setMandateId($order->ID);
             $transfer->setRemittanceInformation(__(sprintf('Order %d', $order->ID), self::DOMAIN));
-            $payment = new PaymentInformation($order->ID, $gateway->settings['target_iban'], $gateway->settings['target_bic'], $gateway->settings['target_account_holder']);
+            $iban = strtoupper($gateway->settings['target_iban']);
+            $bic = strtoupper($gateway->settings['target_bic']);
+            $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
             $payment->setSequenceType(PaymentInformation::S_ONEOFF);
             if (class_exists('WC_Subscriptions_Renewal_Order')) {
                 if (WC_Subscriptions_Renewal_Order::is_renewal($order->ID)) {
@@ -353,12 +355,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 }
             }
             $payment->setDueDate(new \DateTime());
-            $payment->setCreditorId($gateway->settings['creditor_id']);
+            $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
             $payment->setLocalInstrumentCode('COR1');
             $payment->addTransfer($transfer);
             $sepaFile->addPaymentInformation($payment);
         }
-        $domBuilder = new CustomerDirectDebitTransferDomBuilder();
+        $domBuilder = new CustomerDirectDebitTransferDomBuilder('pain.008.003.02');
         $sepaFile->accept($domBuilder);
         $xml = $domBuilder->asXml();
         $now = new DateTime();
@@ -518,10 +520,14 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         update_post_meta( $order_id, self::SEPA_DD_EXPORTED, false);
         update_post_meta( $order_id, self::SEPA_DD_ACCOUNT_HOLDER, $this->get_post($this->id . '-account-holder') );
-        update_post_meta( $order_id, self::SEPA_DD_IBAN, $this->remove_white_space($this->get_post($this->id . '-iban')) );
-        if ($this->askForBIC())
-            update_post_meta( $order_id, self::SEPA_DD_BIC, $this->remove_white_space($this->get_post($this->id . '-bic')) );
-
+        $iban = $this->remove_white_space($this->get_post($this->id . '-iban'));
+        $iban = strtoupper($iban);
+        update_post_meta( $order_id, self::SEPA_DD_IBAN, $iban);
+        if ($this->askForBIC()) {
+            $bic = $this->remove_white_space($this->get_post($this->id . '-bic'));
+            $bic = strtoupper($bic);
+            update_post_meta($order_id, self::SEPA_DD_BIC, $bic);
+        }
         // Mark as on-hold (we're awaiting the Direct Debit)
         $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
 
