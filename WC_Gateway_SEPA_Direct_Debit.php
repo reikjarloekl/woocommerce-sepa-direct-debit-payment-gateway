@@ -54,16 +54,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     function __construct()
     {
         $this->id = self::GATEWAY_ID;
-        $this->supports = array(
-            'products',
-            'subscriptions',
-            'subscription_cancellation',
-            'subscription_suspension',
-            'subscription_reactivation',
-            'subscription_amount_changes',
-            'subscription_date_changes',
-            'subscription_payment_method_change'
-        );
+        $this->supports = array('products');
+        if (!self::isSubscriptions1x()) {
+            $this->supports = array_merge($this->supports, array(
+                'subscriptions',
+                'subscription_cancellation',
+                'subscription_suspension',
+                'subscription_reactivation',
+                'subscription_amount_changes',
+                'subscription_date_changes',
+                'subscription_payment_method_change',
+                'multiple_subscriptions'
+            ));
+        }
 
         $this->method_title = __('SEPA Direct Debit', self::DOMAIN);
         $this->method_description = __('Creates PAIN.008 XML-files for WooCommerce payments.', self::DOMAIN);
@@ -85,11 +88,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     public static function init() {
         load_plugin_textdomain( 'sepa-direct-debit', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
-        add_action( 'scheduled_subscription_payment_' . self::GATEWAY_ID,  __CLASS__ . '::scheduled_subscription_payment', 10, 3);
+        add_action( 'woocommerce_scheduled_subscription_payment_' . self::GATEWAY_ID,  __CLASS__ . '::scheduled_subscription_payment', 10, 3);
         add_filter( 'woocommerce_payment_gateways', __CLASS__ . '::add_to_payment_gateways' );
         add_action( 'admin_menu', __CLASS__ . '::register_sepa_xml_page', 10);
-        add_filter( 'woocommerce_subscriptions_renewal_order_meta_query', __CLASS__ . '::remove_renewal_order_meta', 10, 4 );
-        add_filter( 'woocommerce_subscriptions_renewal_order_meta', __CLASS__ . '::add_exported_to_renewal_order_meta', 10, 4 );
+        add_filter( 'wcs_renewal_order_meta_query', __CLASS__ . '::remove_renewal_order_meta', 10, 4 );
+        add_filter( 'wcs_renewal_order_meta', __CLASS__ . '::add_exported_to_renewal_order_meta', 10, 4 );
 
         add_action( 'add_meta_boxes', __CLASS__ . '::sepa_dd_add_meta_box' );
 
@@ -108,6 +111,14 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             __('SEPA Direct Debit', self::DOMAIN),
             __CLASS__ . '::sepa_dd_meta_box_callback',
             'shop_order',
+            'side'
+        );
+
+        add_meta_box(
+            self::GATEWAY_ID,
+            __('SEPA Direct Debit', self::DOMAIN),
+            __CLASS__ . '::sepa_dd_meta_box_callback',
+            'shop_subscription',
             'side'
         );
     }
@@ -161,7 +172,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * @param $new_order_role
      * @return string
      */
-    public static function remove_renewal_order_meta( $order_meta_query, $original_order_id, $renewal_order_id, $new_order_role ) {
+    public static function remove_renewal_order_meta( $order_meta_query, $original_order, $renewal_order ) {
         $order_meta_query .= " AND `meta_key` NOT IN ("
             .		"'" . self::SEPA_DD_EXPORTED ."')";
         return $order_meta_query;
@@ -177,8 +188,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * @return string
      * @internal param $order_meta_query
      */
-    public static function add_exported_to_renewal_order_meta( $order_meta, $original_order_id, $renewal_order_id, $new_order_role ) {
-        $gateway = get_post_meta($original_order_id, self::PAYMENT_METHOD, true);
+    public static function add_exported_to_renewal_order_meta( $order_meta, $renewal_order, $original_order) {
+        $gateway = get_post_meta($original_order->id, self::PAYMENT_METHOD, true);
         if ($gateway === self::GATEWAY_ID) {
             $order_meta[] = array(
                 'meta_key' => self::SEPA_DD_EXPORTED,
@@ -347,14 +358,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $bic = strtoupper($gateway->settings['target_bic']);
             $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
             $payment->setSequenceType(PaymentInformation::S_ONEOFF);
-            if (class_exists('WC_Subscriptions_Renewal_Order')) {
-                if (WC_Subscriptions_Renewal_Order::is_renewal($order->ID)) {
+            if (function_exists( 'wcs_order_contains_renewal' ) && function_exists( 'wcs_order_contains_resubscribe' )) {
+                $isRenewal = wcs_order_contains_renewal($order) || wcs_order_contains_resubscribe($order);
+                if ($isRenewal) {
                     $payment->setSequenceType(PaymentInformation::S_RECURRING);
                 } else if (WC_Subscriptions_Order::order_contains_subscription($order->ID)) {
                     $payment->setSequenceType(PaymentInformation::S_FIRST);
                 }
             }
-            $payment->setDueDate(new \DateTime());
+            $payment->setDueDate(new \DateTime('tomorrow'));
             $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
             $cor1_enabled = $gateway->settings['export_as_COR1'];
             $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
@@ -388,6 +400,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         echo '<h2>' . __("Export SEPA XML", self::DOMAIN) . '</h2>';
         echo '</div>';
 
+        if (self::isSubscriptions1x()) {
+            echo '<div class="error"><p>' . __("Only WooCommerce Subscriptions version 2.0 and higher is supported.", self::DOMAIN) . '</p></div>';
+        }
 
         try {
             $query = array(
@@ -429,8 +444,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
 
-    public static function scheduled_subscription_payment($amount_to_charge, $order, $product_id) {
-        WC_Subscriptions_Manager::process_subscription_payments_on_order($order->id);
+    public static function scheduled_subscription_payment($amount_to_charge, $order) {
+        $order->payment_complete('');
     }
 
     /**
@@ -491,6 +506,14 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
     /**
+     * @return bool
+     */
+    private static function isSubscriptions1x()
+    {
+        return class_exists('WC_Subscriptions_Order') && !function_exists('wcs_order_contains_renewal');
+    }
+
+    /**
      * Returns, if BIC is required
      */
     function askForBIC() {
@@ -524,16 +547,23 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         global $woocommerce;
         $order = new WC_Order($order_id);
 
-        update_post_meta( $order_id, self::SEPA_DD_EXPORTED, false);
-        update_post_meta( $order_id, self::SEPA_DD_ACCOUNT_HOLDER, $this->get_post($this->id . '-account-holder') );
+        $accountHolder = $this->get_post($this->id . '-account-holder');
         $iban = $this->remove_white_space($this->get_post($this->id . '-iban'));
         $iban = strtoupper($iban);
-        update_post_meta( $order_id, self::SEPA_DD_IBAN, $iban);
+        $bic = '';
         if ($this->askForBIC()) {
             $bic = $this->remove_white_space($this->get_post($this->id . '-bic'));
             $bic = strtoupper($bic);
-            update_post_meta($order_id, self::SEPA_DD_BIC, $bic);
         }
+
+        $this->setSepaMetaData($order_id, $accountHolder, $iban, $bic);
+
+        if (function_exists('wcs_get_subscriptions_for_order')) {
+            foreach (wcs_get_subscriptions_for_order($order, array('order_type' => 'any')) as $subscription) {
+                $this->setSepaMetaData($subscription->id, $accountHolder, $iban, $bic);
+            }
+        }
+
         // Mark as on-hold (we're awaiting the Direct Debit)
         $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
 
@@ -674,5 +704,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         } else {
             return true;
         }
+    }
+
+    /**
+     * @param $order_id
+     * @param $accountHolder
+     * @param $iban
+     * @param $bic
+     */
+    public function setSepaMetaData($order_id, $accountHolder, $iban, $bic)
+    {
+        update_post_meta($order_id, self::SEPA_DD_EXPORTED, false);
+        update_post_meta($order_id, self::SEPA_DD_ACCOUNT_HOLDER, $accountHolder);
+        update_post_meta($order_id, self::SEPA_DD_IBAN, $iban);
+        update_post_meta($order_id, self::SEPA_DD_BIC, $bic);
     }
 }
