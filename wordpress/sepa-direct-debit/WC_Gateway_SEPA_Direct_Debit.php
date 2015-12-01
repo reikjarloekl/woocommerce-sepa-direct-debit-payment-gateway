@@ -405,10 +405,14 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         }
 
         try {
+            $orderStatus = array_keys(wc_get_order_statuses());
+            // do not export cancelled orders.
+            $key = array_search('wc-cancelled', $orderStatus);
+            unset($orderStatus[$key]);
             $query = array(
                 'numberposts' => -1,
                 'post_type' => 'shop_order',
-                'post_status' => array_keys(wc_get_order_statuses()),
+                'post_status' => $orderStatus,
                 'meta_query' => array(
                     array(
                         'key' => self::PAYMENT_METHOD,
@@ -417,7 +421,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                     array(
                         'key' => '_sepa_dd_exported',
                         'value' => false,
-                    ),
+                    )
                 ),
             );
             $to_be_exported = get_posts($query);
