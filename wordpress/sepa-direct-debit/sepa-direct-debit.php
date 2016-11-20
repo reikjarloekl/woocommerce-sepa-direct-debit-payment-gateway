@@ -4,7 +4,7 @@
 Plugin Name: Sepa Direct Debit
 Plugin URI: http://codecanyon.net/item/sepa-payment-gateway-for-woocommerce/12664657
 Description: SEPA Direct Debit support for Woocommerce
-Version: 1.6.2
+Version: 1.6.4
 Author: Joern Bungartz
 Author URI: http://www.bl-solutions.de
 License: Commercial, all rights reserved.
