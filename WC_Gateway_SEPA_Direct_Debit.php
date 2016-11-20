@@ -98,13 +98,33 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
     }
 
+    public static function get_parent_order( $order_id ) {
+        $subscriptions = array();
+        if ( wcs_is_subscription( $order_id ) ) {
+            $subscriptions[] = wcs_get_subscription( $order_id );
+        } elseif ( wcs_order_contains_subscription( $order_id, array( 'parent', 'renewal' ) ) ) {
+            $subscriptions = wcs_get_subscriptions_for_order( $order_id, array( 'order_type' => array( 'parent', 'renewal' ) ) );
+        }
+        if ( 1 == count( $subscriptions ) ) {
+            foreach ($subscriptions as $subscription) {
+                if (false !== $subscription->order) {
+                    $orders[] = $subscription->order;
+                }
+            }
+        }
+        if (empty($orders)) return null;
+        return $orders[0]->id;
+    }
+
     // Add a meta box to the order page to show IBAN and BIC.
     public static function sepa_dd_add_meta_box()
     {
         global $post;
 
-        if(empty($post) || (!get_post_meta($post->ID, self::SEPA_DD_ACCOUNT_HOLDER, true)))
-                return;
+        if(empty($post)) return;
+
+        $info = WC_Gateway_SEPA_Direct_Debit::get_payment_info($post);
+        if (empty($info['account_holder'])) return;
 
         add_meta_box(
             self::GATEWAY_ID,
@@ -134,15 +154,31 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         echo "<p>";
         _e('Account holder', self::DOMAIN);
-        echo ": " . $info['account_holder'] . "</p>";
+        echo ": " . $info['account_holder'];
+        if ($info['is_from_parent']) {
+            echo " ";
+            _e( '(from parent order)', self::DOMAIN);
+        }
+        echo "</p>";
 
         echo "<p>";
         _e('IBAN', self::DOMAIN);
-        echo ": " . $info['iban'] . "</p>";
+        echo ": " . $info['iban'];
+        if ($info['is_from_parent']) {
+            echo " ";
+            _e( '(from parent order)', self::DOMAIN);
+        }
+        echo "</p>";
 
         echo "<p>";
         _e('BIC', self::DOMAIN);
-        echo ": " . $info['bic'] . "</p>";
+        echo ": " . $info['bic'];
+        if ($info['is_from_parent']) {
+            echo " ";
+            _e( '(from parent order)', self::DOMAIN);
+        }
+        echo "</p>";
+
     }
 
     /**
@@ -229,11 +265,20 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * @return array Contains payment info.
      */
     private static function get_payment_info($post) {
+        if (is_object($post)) {
+            $post = $post->ID;
+        }
+
         $result = array();
-        $result['account_holder'] = get_post_meta($post->ID, self::SEPA_DD_ACCOUNT_HOLDER, true);
-        $result['total'] = get_post_meta($post->ID, self::ORDER_TOTAL, true);
-        $result['iban'] = get_post_meta($post->ID, self::SEPA_DD_IBAN, true);
-        $result['bic'] = get_post_meta($post->ID, self::SEPA_DD_BIC, true);
+        $result['total'] = get_post_meta($post, self::ORDER_TOTAL, true);
+        $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
+        if (empty($result['account_holder'])) {
+            $post = WC_Gateway_SEPA_Direct_Debit::get_parent_order($post);
+            $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
+            $result['is_from_parent'] = true;
+        }
+        $result['iban'] = get_post_meta($post, self::SEPA_DD_IBAN, true);
+        $result['bic'] = get_post_meta($post, self::SEPA_DD_BIC, true);
         return $result;
     }
 
@@ -271,9 +316,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             <td class="row-title"><a href="<?php echo get_edit_post_link($order->ID); ?>">#<?= $order->ID ?></a></td>
             <td><?php echo $payment_info['total'] ?></td>
             <td><?= $shipping_name ?></td>
-            <td><?= $payment_info['account_holder'] ?></td>
-            <td><?php echo $payment_info['iban'] ?></td>
-            <td><?php echo $payment_info['bic'] ?></td>
+            <td><?= $payment_info['account_holder'] ?> <?php if ($payment_info['is_from_parent']) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
+            <td><?php echo $payment_info['iban']  ?> <?php if ($payment_info['is_from_parent']) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
+            <td><?php echo $payment_info['bic'] ?> <?php if ($payment_info['is_from_parent']) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
             <?php
         }
         echo '</tbody></table>';
