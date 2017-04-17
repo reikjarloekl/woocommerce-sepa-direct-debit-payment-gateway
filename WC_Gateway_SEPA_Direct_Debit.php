@@ -100,9 +100,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
     public static function get_parent_order( $order_id ) {
         $subscriptions = array();
-        if ( wcs_is_subscription( $order_id ) ) {
+        if ( function_exists( 'wcs_is_subscription') && wcs_is_subscription( $order_id ) ) {
             $subscriptions[] = wcs_get_subscription( $order_id );
-        } elseif ( wcs_order_contains_subscription( $order_id, array( 'parent', 'renewal' ) ) ) {
+        } elseif ( function_exists( 'wcs_order_contains_subscription') && wcs_order_contains_subscription( $order_id, array( 'parent', 'renewal' ) ) ) {
             $subscriptions = wcs_get_subscriptions_for_order( $order_id, array( 'order_type' => array( 'parent', 'renewal' ) ) );
         }
         if ( 1 == count( $subscriptions ) ) {
@@ -253,7 +253,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $upload_dir = wp_upload_dir();
         $target_dir = $upload_dir['basedir'] . '/' . self::get_xml_dir();
         if (false === wp_mkdir_p( $target_dir )) {
-            throw new Exception(__(sprintf('Could not create output path %s', $target_dir)));
+            throw new Exception(sprintf(__('Could not create output path %s', self::DOMAIN), $target_dir));
         }
         return $target_dir;
     }
@@ -391,8 +391,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
         $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
 
-        foreach($orders as $order) {
+        error_log("SEPA DD: trying to export the following orders:");
+        error_log("SEPA DD: " . print_r($orders, TRUE));
+        foreach($orders as &$order) {
+            error_log("SEPA DD: Trying to export order: ID $order->ID");
             $payment_info = self::get_payment_info($order);
+            error_log("SEPA DD: Payment info: " . print_r($payment_info, TRUE));
             $parts = preg_split('/\./', $payment_info['total']);
             $amount = strval($parts[0]) * 100 + strval($parts[1]);
             $transfer = new CustomerDirectDebitTransferInformation($amount, $payment_info['iban'], $payment_info['account_holder']);
@@ -400,33 +404,41 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 $transfer->setBic($payment_info['bic']);
             $transfer->setMandateSignDate(new \DateTime($order->post_date));
             $transfer->setMandateId($order->ID);
-            $transfer->setRemittanceInformation(__(sprintf('Order %d', $order->ID), self::DOMAIN));
+            $remittance_info = $gateway->settings['remittance_info'];
+            $transfer->setRemittanceInformation($remittance_info . " " . sprintf(__('Order %d', self::DOMAIN), $order->ID));
             $iban = strtoupper($gateway->settings['target_iban']);
             $bic = strtoupper($gateway->settings['target_bic']);
             $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
             $payment->setSequenceType(PaymentInformation::S_ONEOFF);
-            if (function_exists( 'wcs_order_contains_renewal' ) && function_exists( 'wcs_order_contains_resubscribe' )) {
+            /* Disabled setting of sequence type for now, because with WC3 it consumes way too much memory to find out if order contains subscription.
+            if (function_exists( 'wcs_order_contains_renewal' )
+                && function_exists( 'wcs_order_contains_resubscribe' )
+                && function_exists( 'wcs_order_contains_subscription' )
+            ) {
                 $isRenewal = wcs_order_contains_renewal($order) || wcs_order_contains_resubscribe($order);
                 if ($isRenewal) {
                     $payment->setSequenceType(PaymentInformation::S_RECURRING);
-                } else if (WC_Subscriptions_Order::order_contains_subscription($order->ID)) {
+                } else if (wcs_order_contains_subscription($order)) {
                     $payment->setSequenceType(PaymentInformation::S_FIRST);
                 }
             }
+            */
             $payment->setDueDate(new \DateTime('tomorrow'));
             $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
             $cor1_enabled = $gateway->settings['export_as_COR1'];
             $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
             $payment->addTransfer($transfer);
             $sepaFile->addPaymentInformation($payment);
+            error_log("SEPA DD: Finished exporting order: ID $order->ID");
         }
         $domBuilder = new CustomerDirectDebitTransferDomBuilder('pain.008.003.02');
         $sepaFile->accept($domBuilder);
         $xml = $domBuilder->asXml();
         $now = new DateTime();
         $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
+        error_log("SEPA DD: Writing direct debits to file" . self::get_xml_path() . "/" . $filename);
         if (false === file_put_contents(self::get_xml_path() . "/" . $filename, $xml)) {
-            throw new Exception(__(sprintf('Could not create output file %s', $filename)));
+            throw new Exception(sprintf(__('Could not create output file %s', self::DOMAIN), $filename));
         }
         return $filename;
     }
@@ -476,9 +488,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $filename = self::export_xml($to_be_exported);
+                error_log("SEPA DD: Finished exporting orders. Updating order meta data.");
                 foreach ($to_be_exported as $order) {
+                    error_log("SEPA DD: Updating meta data for order: ID $order->ID");
                     update_post_meta($order->ID, '_sepa_dd_exported', true);
                 }
+                error_log("SEPA DD: Finished updating meta data");
                 echo '<div class="updated"><p>' . sprintf(__("Exported %d payments to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
             } else {
                 if ($to_be_exported) {
@@ -488,9 +503,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 }
             }
             self::list_xml_files();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
             echo "<div class=\"error notice\"><p>$msg</p></div>";
+            error_log("SEPA DD: $msg");
         }
     }
 
@@ -528,6 +544,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'checkbox',
                 'label' => __('Check this if your customers have to enter their BIC/Swift-Number. Some banks accept IBAN-only for domestic transactions.', self::DOMAIN),
                 'default' => 'yes'),
+            'remittance_info' => array(
+                'title' => __('Remittance information', self::DOMAIN),
+                'type' => 'text',
+                'description' => __('The text that will show on the account statement of the customer as remittance information.', self::DOMAIN),
+            ),
             'target_account_holder' => array(
                 'title' => __('Target account holder', self::DOMAIN),
                 'type' => 'text',
