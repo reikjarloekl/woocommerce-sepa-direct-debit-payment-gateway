@@ -122,6 +122,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         global $post;
 
         if(empty($post)) return;
+        $post_type = get_post_type($post);
+        if (($post_type != 'shop_order')
+            && ($post_type != 'shop_subscription')) return;
 
         $info = WC_Gateway_SEPA_Direct_Debit::get_payment_info($post);
         if (empty($info['account_holder'])) return;
