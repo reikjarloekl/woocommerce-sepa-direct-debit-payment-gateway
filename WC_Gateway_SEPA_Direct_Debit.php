@@ -404,7 +404,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $transfer->setMandateSignDate(new \DateTime($order->post_date));
             $transfer->setMandateId($order->ID);
             $remittance_info = $gateway->settings['remittance_info'];
-            $transfer->setRemittanceInformation($remittance_info . " " . sprintf(__('Order %d', self::DOMAIN), $order->ID));
+            $wc_order = new WC_Order($order->ID);
+            $order_number = trim(str_replace('#', '', $wc_order->get_order_number()));
+            $transfer->setRemittanceInformation($remittance_info . " " . sprintf(__('Order %d', self::DOMAIN), $order_number));
             $iban = strtoupper($gateway->settings['target_iban']);
             $bic = strtoupper($gateway->settings['target_bic']);
             $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
