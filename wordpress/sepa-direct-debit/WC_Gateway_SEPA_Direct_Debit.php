@@ -107,13 +107,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         }
         if ( 1 == count( $subscriptions ) ) {
             foreach ($subscriptions as $subscription) {
-                if (false !== $subscription->order) {
-                    $orders[] = $subscription->order;
+                if (false !== $subscription->get_parent()) {
+                    $orders[] = $subscription->get_parent();
                 }
             }
         }
         if (empty($orders)) return null;
-        return $orders[0]->id;
+        return $orders[0]->get_id();
     }
 
     // Add a meta box to the order page to show IBAN and BIC.
@@ -403,10 +403,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 $transfer->setBic($payment_info['bic']);
             $transfer->setMandateSignDate(new \DateTime($order->post_date));
             $transfer->setMandateId($order->ID);
-            $remittance_info = $gateway->settings['remittance_info'];
+            $remittance_info = "";
+            if (array_key_exists('remittance_info', $gateway->settings)) {
+                $remittance_info = $gateway->settings['remittance_info'] . " ";
+            }
             $wc_order = new WC_Order($order->ID);
             $order_number = trim(str_replace('#', '', $wc_order->get_order_number()));
-            $transfer->setRemittanceInformation($remittance_info . " " . sprintf(__('Order %d', self::DOMAIN), $order_number));
+            $transfer->setRemittanceInformation($remittance_info . sprintf(__('Order %d', self::DOMAIN), $order_number));
             $iban = strtoupper($gateway->settings['target_iban']);
             $bic = strtoupper($gateway->settings['target_bic']);
             $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
@@ -415,11 +418,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 && function_exists( 'wcs_order_contains_resubscribe' )
                 && function_exists( 'wcs_order_contains_subscription' )
             ) {
-                $isRenewal = wcs_order_contains_renewal($order);
-                $isResubscription = wcs_order_contains_resubscribe($order);
+                $isRenewal = wcs_order_contains_renewal($order->ID);
+                $isResubscription = wcs_order_contains_resubscribe($order->ID);
                 if ($isRenewal || $isResubscription) {
                     $payment->setSequenceType(PaymentInformation::S_RECURRING);
-                } else if (wcs_order_contains_subscription($order)) {
+                } else if (wcs_order_contains_subscription($order->ID)) {
                     $payment->setSequenceType(PaymentInformation::S_FIRST);
                 }
             }
@@ -626,7 +629,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $this->setSepaMetaData($order_id, $accountHolder, $iban, $bic);
 
         if (function_exists('wcs_get_subscriptions_for_order')) {
-            foreach (wcs_get_subscriptions_for_order($order, array('order_type' => 'any')) as $subscription) {
+            foreach (wcs_get_subscriptions_for_order($order_id, array('order_type' => 'any')) as $subscription) {
                 $this->setSepaMetaData($subscription->id, $accountHolder, $iban, $bic);
             }
         }
