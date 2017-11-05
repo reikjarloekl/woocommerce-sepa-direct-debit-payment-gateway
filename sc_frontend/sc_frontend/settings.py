@@ -106,7 +106,7 @@ IMAGE_DIR = '/var/opt/simplecam/images'
 # Confirmation Mail settings
 CONFIRMATION_MAIL_SUBJECT = 'Einladung zu SimpleCam {}'
 CONFIRMATION_MAIL_SENDER = 'info@simplecam.de'
-CONFIRMATION_MAIL_URL = 'http://www.simplecam.de/confirm_email/?token={}'
+CONFIRMATION_MAIL_URL = 'http://www.simplecam.de/app/confirm_email/{}'
 
 # Email settings
 EMAIL_HOST = 'wp228.webpack.hosteurope.de'
