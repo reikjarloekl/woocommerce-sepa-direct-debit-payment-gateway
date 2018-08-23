@@ -64,6 +64,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'subscription_amount_changes',
                 'subscription_date_changes',
                 'subscription_payment_method_change_customer',
+                'subscription_payment_method_change_admin',
                 'multiple_subscriptions'
             ));
         }
@@ -80,6 +81,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         if (is_admin())
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+
+        // Allow store managers to manually set SEPA Direct Debit as the payment method on a subscription
+        add_filter( 'woocommerce_subscription_payment_meta', array( $this, 'add_subscription_payment_meta' ), 10, 2 );
+        add_filter( 'woocommerce_subscription_validate_payment_meta', array( $this, 'validate_subscription_payment_meta' ), 10, 2 );
     }
 
     /**
@@ -144,6 +149,66 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             'shop_subscription',
             'side'
         );
+    }
+
+    /**
+     * Include the payment meta data required to process automatic recurring payments so that store managers can
+     * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions v2.0+.
+     *
+     * @since 2.4
+     * @param array $payment_meta associative array of meta data required for automatic payments
+     * @param WC_Subscription $subscription An instance of a subscription object
+     * @return array
+     */
+    public function add_subscription_payment_meta( $payment_meta, $subscription ) {
+        $payment_meta[ $this->id ] = array(
+            'post_meta' => array(
+                self::SEPA_DD_ACCOUNT_HOLDER => array(
+                    'value' => get_post_meta( $subscription->get_id(), self::SEPA_DD_ACCOUNT_HOLDER, true ),
+                    'label' => __('Account holder', self::DOMAIN),
+                ),
+                self::SEPA_DD_IBAN => array(
+                    'value' => get_post_meta( $subscription->get_id(), self::SEPA_DD_IBAN, true ),
+                    'label' => __('IBAN', self::DOMAIN),
+                ),
+                self::SEPA_DD_BIC => array(
+                    'value' => get_post_meta( $subscription->get_id(), self::SEPA_DD_BIC, true ),
+                    'label' => __('BIC', self::DOMAIN),
+                ),
+            ),
+        );
+        return $payment_meta;
+    }
+    /**
+     * Validate the payment meta data required to process automatic recurring payments so that store managers can
+     * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
+     *
+     * @since 2.4
+     * @param string $payment_method_id The ID of the payment method to validate
+     * @param array $payment_meta associative array of meta data required for automatic payments
+     * @return array
+     */
+    public function validate_subscription_payment_meta( $payment_method_id, $payment_meta ) {
+        if ( $this->id === $payment_method_id ) {
+            if ( ! isset( $payment_meta['post_meta'][self::SEPA_DD_ACCOUNT_HOLDER]['value'] ) 
+                || empty( $payment_meta['post_meta'][self::SEPA_DD_ACCOUNT_HOLDER]['value'] ) ) {
+                throw new Exception( __('Account holder', self::DOMAIN) . " " . __('is a required field.', 'woocommerce'));
+            }
+            if ( ! isset( $payment_meta['post_meta'][self::SEPA_DD_IBAN]['value'] ) 
+                || empty( $payment_meta['post_meta'][self::SEPA_DD_IBAN]['value'] ) ) {
+                throw new Exception( __('IBAN', self::DOMAIN) . " " . __('is a required field.', 'woocommerce') );
+            } else {
+                $iban = $payment_meta['post_meta'][self::SEPA_DD_IBAN]['value'];
+                if (!checkIBAN($iban)) throw new Exception( __('Please enter a valid IBAN.', self::DOMAIN) );
+            }
+            if ( ! isset( $payment_meta['post_meta'][self::SEPA_DD_BIC]['value'] ) 
+                || empty( $payment_meta['post_meta'][self::SEPA_DD_BIC]['value'] ) ) {
+                if ($this->askForBIC()) throw new Exception( __('BIC', self::DOMAIN) . " " . __('is a required field.', 'woocommerce') );
+            } else {
+                $bic = $payment_meta['post_meta'][self::SEPA_DD_BIC]['value'];
+                if (!checkBIC($bic)) throw new Exception( __('Please enter a valid BIC.', self::DOMAIN) );
+            }               
+        }
     }
 
     /**
@@ -761,7 +826,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         }
         if ($this->askForBIC()) {
             $bic = $this->check_required_field($this->id . '-bic', __('BIC', self::DOMAIN), $errors);
-            if ($iban != null) {
+            if ($bic != null) {
                 if (!checkBIC($bic))
                     $errors[] = __('Please enter a valid BIC.', self::DOMAIN);
             }
