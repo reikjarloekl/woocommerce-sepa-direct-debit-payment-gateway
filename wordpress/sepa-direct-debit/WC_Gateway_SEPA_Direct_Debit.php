@@ -448,7 +448,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
     /**
-     * Export the given orders into a PAIN.008.003.02 XML-file.
+     * Export the given orders into a PAIN XML-file (format version configured via setting).
      *
      * @param $orders The orders to export.
      * @return string The filename of the generated XML-file.
@@ -458,6 +458,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
         $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
         $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
+        $painFormat = 'pain.008.003.02';
+        if (array_key_exists('pain_format', $gateway->settings)) {
+            $painFormat = $gateway->settings['pain_format'];
+        }
 
         foreach($orders as &$order) {
             $payment_info = self::get_payment_info($order);
@@ -493,12 +497,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
             $payment->setDueDate(new \DateTime('tomorrow'));
             $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
-            $cor1_enabled = $gateway->settings['export_as_COR1'];
+            // COR1 no longer supported in pain.008.001.02
+            $cor1_enabled = $gateway->settings['export_as_COR1'] && ($painFormat != 'pain.008.001.02');
             $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
             $payment->addTransfer($transfer);
             $sepaFile->addPaymentInformation($payment);
         }
-        $domBuilder = new CustomerDirectDebitTransferDomBuilder('pain.008.003.02');
+        $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
         $sepaFile->accept($domBuilder);
         $xml = $domBuilder->asXml();
         $now = new DateTime();
@@ -632,10 +637,20 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'text',
                 'description' => __('The creditor ID to be used in SEPA debits.', self::DOMAIN),
             ),
+            'pain_format' => array(
+                'title' => __('PAIN file format', self::DOMAIN),
+                'type' => 'select',
+                'description' => __('The PAIN XML version to create. If you don\'t know what this is, leave unchanged.', self::DOMAIN),
+                'options' => array(
+                    'pain.008.003.02' => __('pain.008.003.02 (SEPA DK 2.7 to 2.9)', self::DOMAIN),
+                    'pain.008.001.02' => __('pain.008.001.02 (SEPA DK from 3.0)', self::DOMAIN)
+                ),
+                'default' => 'pain.008.003.02'
+            ),
             'export_as_COR1' => array(
                 'title' => __('Export payments as express debits (COR1)', self::DOMAIN),
                 'type' => 'checkbox',
-                'label' => __('Check this to export debits as express or COR1 debits. This reduces the debit delay from 5 to 1 business day but is not supported by all banks. Please check with your bank before enabling this setting.', self::DOMAIN),
+                'label' => __('Check this to export debits as express or COR1 debits. This reduces the debit delay from 5 to 1 business day but is not supported by all banks. Please check with your bank before enabling this setting. Is ignored for pain.008.001.02 file format.', self::DOMAIN),
                 'default' => 'no'),
         );
     }
