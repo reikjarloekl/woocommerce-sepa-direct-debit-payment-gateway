@@ -448,6 +448,51 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     }
 
     /**
+     * Create a new SEPA direct debit payment info structure.
+     *
+     * @param $id ID to use for the payment info structure.
+     * @param $sequence Sequence code to set for the payment info structure.
+     * @param $painFormat The output format of the XML to be created.
+     * @return string The new SEPA direct debit payment info object filled according to the plugin settings.
+     */
+    private static function get_sepa_payment_info($id, $sequence, $painFormat) {
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        $iban = strtoupper($gateway->settings['target_iban']);
+        $bic = strtoupper($gateway->settings['target_bic']);
+        $payment = new PaymentInformation($id, $iban, $bic, $gateway->settings['target_account_holder']);
+        $payment->setSequenceType($sequence);
+        $payment->setDueDate(new \DateTime('tomorrow'));
+        $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
+        // COR1 no longer supported in pain.008.001.02
+        $cor1_enabled = $gateway->settings['export_as_COR1'] && ($painFormat != 'pain.008.001.02');
+        $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
+        return $payment;
+    }
+
+    /**
+     * Get the SEPA direct debit sequence code for the given order.
+     *
+     * @param $id ID of the order to get the correct SEPA direct debit sequence code for.
+     * @return string The sequence code corresponding to the order payment due.
+     */
+    private static function get_sequence_for_order($id) {
+        $sequence = PaymentInformation::S_ONEOFF;
+        if (function_exists( 'wcs_order_contains_renewal' )
+            && function_exists( 'wcs_order_contains_resubscribe' )
+            && function_exists( 'wcs_order_contains_subscription' )
+        ) {
+            $isRenewal = wcs_order_contains_renewal($id);
+            $isResubscription = wcs_order_contains_resubscribe($id);
+            if ($isRenewal || $isResubscription) {
+                $sequence = PaymentInformation::S_RECURRING;
+            } else if (wcs_order_contains_subscription($id)) {
+                $sequence = PaymentInformation::S_FIRST;
+            }
+        }
+        return $sequence;
+    }
+
+    /**
      * Export the given orders into a PAIN XML-file (format version configured via setting).
      *
      * @param $orders The orders to export.
@@ -462,7 +507,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         if (array_key_exists('pain_format', $gateway->settings)) {
             $painFormat = $gateway->settings['pain_format'];
         }
+        $singlePaymentInfo = false;
+        if (array_key_exists('single_payment_info', $gateway->settings)) {
+            $singlePaymentInfo = $gateway->settings['single_payment_info'];    
+        }
+        $payment = null;
 
+        if ($singlePaymentInfo) {
+            $payment = self::get_sepa_payment_info("paymentInfo", PaymentInformation::S_ONEOFF, $painFormat);
+        }
         foreach($orders as &$order) {
             $payment_info = self::get_payment_info($order);
             $parts = preg_split('/\./', $payment_info['total']);
@@ -479,28 +532,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $wc_order = new WC_Order($order->ID);
             $order_number = trim(str_replace('#', '', $wc_order->get_order_number()));
             $transfer->setRemittanceInformation($remittance_info . sprintf(__('Order %d', self::DOMAIN), $order_number));
-            $iban = strtoupper($gateway->settings['target_iban']);
-            $bic = strtoupper($gateway->settings['target_bic']);
-            $payment = new PaymentInformation($order->ID, $iban, $bic, $gateway->settings['target_account_holder']);
-            $payment->setSequenceType(PaymentInformation::S_ONEOFF);
-            if (function_exists( 'wcs_order_contains_renewal' )
-                && function_exists( 'wcs_order_contains_resubscribe' )
-                && function_exists( 'wcs_order_contains_subscription' )
-            ) {
-                $isRenewal = wcs_order_contains_renewal($order->ID);
-                $isResubscription = wcs_order_contains_resubscribe($order->ID);
-                if ($isRenewal || $isResubscription) {
-                    $payment->setSequenceType(PaymentInformation::S_RECURRING);
-                } else if (wcs_order_contains_subscription($order->ID)) {
-                    $payment->setSequenceType(PaymentInformation::S_FIRST);
-                }
+            if (!$singlePaymentInfo) {
+                $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormat);
             }
-            $payment->setDueDate(new \DateTime('tomorrow'));
-            $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
-            // COR1 no longer supported in pain.008.001.02
-            $cor1_enabled = $gateway->settings['export_as_COR1'] && ($painFormat != 'pain.008.001.02');
-            $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
             $payment->addTransfer($transfer);
+            if (!$singlePaymentInfo) {
+                $sepaFile->addPaymentInformation($payment);
+            }
+        }
+        if ($singlePaymentInfo) {
             $sepaFile->addPaymentInformation($payment);
         }
         $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
@@ -651,7 +691,14 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'title' => __('Export payments as express debits (COR1)', self::DOMAIN),
                 'type' => 'checkbox',
                 'label' => __('Check this to export debits as express or COR1 debits. This reduces the debit delay from 5 to 1 business day but is not supported by all banks. Please check with your bank before enabling this setting. Is ignored for pain.008.001.02 file format.', self::DOMAIN),
-                'default' => 'no'),
+                'default' => 'no'
+            ),
+            'single_payment_info' => array(
+                'title' => __('Export all transfers in single payment info segment.', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Check this to export all payments in a single payment info segment within the XML file. This is required by some banks (e.g., German Commerzbank) and may reduce costs with other banks. The sequence information will be set to "one-off" in this case for all payments. If this setting is disabled, each transfer is exported in a separate payment info segment having the sequence type set correctly ("one-off", "first of a series of recurring payments", "recurring payment").', self::DOMAIN),
+                'default' => 'no'
+            ),
         );
     }
 

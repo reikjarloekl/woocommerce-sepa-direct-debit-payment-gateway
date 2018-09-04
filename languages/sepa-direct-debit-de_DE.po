@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Sepa Direct Debit\n"
-"POT-Creation-Date: 2018-09-02 13:08+0200\n"
-"PO-Revision-Date: 2018-09-02 13:08+0200\n"
+"POT-Creation-Date: 2018-09-03 22:13+0200\n"
+"PO-Revision-Date: 2018-09-03 22:27+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -21,8 +21,8 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:72 WC_Gateway_SEPA_Direct_Debit.php:139
-#: WC_Gateway_SEPA_Direct_Debit.php:147 WC_Gateway_SEPA_Direct_Debit.php:602
-#: WC_Gateway_SEPA_Direct_Debit.php:679
+#: WC_Gateway_SEPA_Direct_Debit.php:147 WC_Gateway_SEPA_Direct_Debit.php:642
+#: WC_Gateway_SEPA_Direct_Debit.php:726
 msgid "SEPA Direct Debit"
 msgstr "SEPA-Lastschrift"
 
@@ -31,35 +31,35 @@ msgid "Creates PAIN.008 XML-files for WooCommerce payments."
 msgstr "Erstellt PAIN.008 XML-Dateien für WooCommerce Zahlungen."
 
 #: WC_Gateway_SEPA_Direct_Debit.php:168 WC_Gateway_SEPA_Direct_Debit.php:195
-#: WC_Gateway_SEPA_Direct_Debit.php:224 WC_Gateway_SEPA_Direct_Debit.php:769
-#: WC_Gateway_SEPA_Direct_Debit.php:836
+#: WC_Gateway_SEPA_Direct_Debit.php:224 WC_Gateway_SEPA_Direct_Debit.php:816
+#: WC_Gateway_SEPA_Direct_Debit.php:883
 msgid "Account holder"
 msgstr "Kontoinhaber"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:172 WC_Gateway_SEPA_Direct_Debit.php:199
 #: WC_Gateway_SEPA_Direct_Debit.php:233 WC_Gateway_SEPA_Direct_Debit.php:368
-#: WC_Gateway_SEPA_Direct_Debit.php:774 WC_Gateway_SEPA_Direct_Debit.php:837
+#: WC_Gateway_SEPA_Direct_Debit.php:821 WC_Gateway_SEPA_Direct_Debit.php:884
 msgid "IBAN"
 msgstr "IBAN"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:176 WC_Gateway_SEPA_Direct_Debit.php:206
 #: WC_Gateway_SEPA_Direct_Debit.php:242 WC_Gateway_SEPA_Direct_Debit.php:369
-#: WC_Gateway_SEPA_Direct_Debit.php:781 WC_Gateway_SEPA_Direct_Debit.php:843
+#: WC_Gateway_SEPA_Direct_Debit.php:828 WC_Gateway_SEPA_Direct_Debit.php:890
 msgid "BIC"
 msgstr "BIC"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:195 WC_Gateway_SEPA_Direct_Debit.php:199
-#: WC_Gateway_SEPA_Direct_Debit.php:206 WC_Gateway_SEPA_Direct_Debit.php:824
+#: WC_Gateway_SEPA_Direct_Debit.php:206 WC_Gateway_SEPA_Direct_Debit.php:871
 msgid "is a required field."
 msgstr "ist ein Pflichtfeld"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:202 WC_Gateway_SEPA_Direct_Debit.php:746
-#: WC_Gateway_SEPA_Direct_Debit.php:840
+#: WC_Gateway_SEPA_Direct_Debit.php:202 WC_Gateway_SEPA_Direct_Debit.php:793
+#: WC_Gateway_SEPA_Direct_Debit.php:887
 msgid "Please enter a valid IBAN."
 msgstr "Bitte geben Sie eine gültige IBAN ein."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:209 WC_Gateway_SEPA_Direct_Debit.php:747
-#: WC_Gateway_SEPA_Direct_Debit.php:846
+#: WC_Gateway_SEPA_Direct_Debit.php:209 WC_Gateway_SEPA_Direct_Debit.php:794
+#: WC_Gateway_SEPA_Direct_Debit.php:893
 msgid "Please enter a valid BIC."
 msgstr "Bitte geben Sie eine gültige BIC ein."
 
@@ -124,74 +124,74 @@ msgstr ""
 "Bitte klicken Sie mit der rechten Maustaste und \"Speichern-Link unter\", um "
 "die XML-Dateien herunterladen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:481
+#: WC_Gateway_SEPA_Direct_Debit.php:534
 #, php-format
 msgid "Order %d"
 msgstr "Bestellung %d"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:512
+#: WC_Gateway_SEPA_Direct_Debit.php:552
 #, php-format
 msgid "Could not create output file %s"
 msgstr "Konnte Ausgabedatei %s nicht erstellen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:524
+#: WC_Gateway_SEPA_Direct_Debit.php:564
 msgid "You do not have permission to access this page!"
 msgstr "Sie sind nicht befugt, auf diese Seite zuzugreifen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:530
+#: WC_Gateway_SEPA_Direct_Debit.php:570
 msgid "Export SEPA XML"
 msgstr "SEPA XML exportieren"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:534
+#: WC_Gateway_SEPA_Direct_Debit.php:574
 msgid "Only WooCommerce Subscriptions version 2.0 and higher is supported."
 msgstr "Nur WooCommerce Subscriptions Version 2.0 oder höher wird unterstützt."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:566
+#: WC_Gateway_SEPA_Direct_Debit.php:606
 #, php-format
 msgid "Exported %d payments to new SEPA XML: %s"
 msgstr "%d Zahlungen in neues SEPA XML exportiert: %s"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:571
+#: WC_Gateway_SEPA_Direct_Debit.php:611
 msgid "No new payments to export."
 msgstr "Keine neuen Zahlungen zum Export."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:594
+#: WC_Gateway_SEPA_Direct_Debit.php:634
 msgid "Enable/Disable"
 msgstr "Aktivieren/Deaktivieren"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:596
+#: WC_Gateway_SEPA_Direct_Debit.php:636
 msgid "Enable SEPA Direct Debit."
 msgstr "SEPA-Lastschrift aktivieren."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:599
+#: WC_Gateway_SEPA_Direct_Debit.php:639
 msgid "Title"
 msgstr "Titel"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:601
+#: WC_Gateway_SEPA_Direct_Debit.php:641
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 "Hier können Sie den Titel eingeben den der Benutzer während des Checkouts "
 "sieht."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:605
+#: WC_Gateway_SEPA_Direct_Debit.php:645
 msgid "Description"
 msgstr "Beschreibung"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:607
+#: WC_Gateway_SEPA_Direct_Debit.php:647
 msgid "This controls the description which the user sees during checkout."
 msgstr ""
 "Hier können Sie die Beschreibung eingeben den der Benutzer während des "
 "Checkouts sieht."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:608
+#: WC_Gateway_SEPA_Direct_Debit.php:648
 msgid "Pay with SEPA direct debit."
 msgstr "Per SEPA-Lastschrift bezahlen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:611
+#: WC_Gateway_SEPA_Direct_Debit.php:651
 msgid "Ask for BIC"
 msgstr "Nach BIC fragen"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:613
+#: WC_Gateway_SEPA_Direct_Debit.php:653
 msgid ""
 "Check this if your customers have to enter their BIC/Swift-Number. Some "
 "banks accept IBAN-only for domestic transactions."
@@ -200,11 +200,11 @@ msgstr ""
 "Einige Banken akzeptieren Lastschriften mit nur der IBAN für "
 "Inlandsüberweisungen."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:616
+#: WC_Gateway_SEPA_Direct_Debit.php:656
 msgid "Remittance information"
 msgstr "Verwendungszweck"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:618
+#: WC_Gateway_SEPA_Direct_Debit.php:658
 msgid ""
 "The text that will show on the account statement of the customer as "
 "remittance information."
@@ -212,45 +212,45 @@ msgstr ""
 "Dieser Text wird auf dem Kontoauszug des Kunden als Verwendungszweck "
 "angezeigt."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:621
+#: WC_Gateway_SEPA_Direct_Debit.php:661
 msgid "Target account holder"
 msgstr "Ziel-Kontoinhaber"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:623
+#: WC_Gateway_SEPA_Direct_Debit.php:663
 msgid "The account holder of the account that shall receive the payments."
 msgstr "Der Kontoinhaber des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:626
+#: WC_Gateway_SEPA_Direct_Debit.php:666
 msgid "Target IBAN"
 msgstr "Ziel IBAN"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:628
+#: WC_Gateway_SEPA_Direct_Debit.php:668
 msgid "The IBAN of the account that shall receive the payments."
 msgstr "Die IBAN-Nummer des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:631
+#: WC_Gateway_SEPA_Direct_Debit.php:671
 msgid "Target BIC"
 msgstr "Ziel BIC"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:633
+#: WC_Gateway_SEPA_Direct_Debit.php:673
 msgid "The BIC of the account that shall receive the payments."
 msgstr "Die BIC-Nummer des Kontos, das die Zahlungen erhalten soll."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:636
+#: WC_Gateway_SEPA_Direct_Debit.php:676
 msgid "Creditor ID"
 msgstr "Gläubiger ID"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:638
+#: WC_Gateway_SEPA_Direct_Debit.php:678
 msgid "The creditor ID to be used in SEPA debits."
 msgstr ""
 "Die Gläubiger ID, die für SEPA-Lastschriften verwendet wird. Wird in "
 "Deutschland von der Bundesbank vergeben."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:641
+#: WC_Gateway_SEPA_Direct_Debit.php:681
 msgid "PAIN file format"
 msgstr "PAIN Datei-Format"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:643
+#: WC_Gateway_SEPA_Direct_Debit.php:683
 msgid ""
 "The PAIN XML version to create. If you don't know what this is, leave "
 "unchanged."
@@ -258,19 +258,19 @@ msgstr ""
 "Die zu erstellende PAIN-XML-Version. Wenn Sie nicht wissen, was das ist, "
 "lassen Sie es unverändert."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:645
+#: WC_Gateway_SEPA_Direct_Debit.php:685
 msgid "pain.008.003.02 (SEPA DK 2.7 to 2.9)"
 msgstr "pain.008.003.02 (SEPA DK 2.7 bis 2.9)"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:646
+#: WC_Gateway_SEPA_Direct_Debit.php:686
 msgid "pain.008.001.02 (SEPA DK from 3.0)"
 msgstr "pain.008.001.02 (SEPA DK ab 3,0)"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:651
+#: WC_Gateway_SEPA_Direct_Debit.php:691
 msgid "Export payments as express debits (COR1)"
 msgstr "Zahlungen als Eillastschrift (COR1) exportieren."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:653
+#: WC_Gateway_SEPA_Direct_Debit.php:693
 msgid ""
 "Check this to export debits as express or COR1 debits. This reduces the "
 "debit delay from 5 to 1 business day but is not supported by all banks. "
@@ -283,19 +283,44 @@ msgstr ""
 "aber nicht von allen Banken unterstützt. Bitte sprechen Sie mit Ihrer Bank "
 "bevor Sie die Option aktivieren. Wird für pain.008.001.02 nicht verwendet."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:718
+#: WC_Gateway_SEPA_Direct_Debit.php:697
+msgid "Export all transfers in single payment info segment."
+msgstr ""
+"Alle Zahlungen in einem einzelnen Payment Info segment im XML exportieren."
+
+#: WC_Gateway_SEPA_Direct_Debit.php:699
+msgid ""
+"Check this to export all payments in a single payment info segment within "
+"the XML file. This is required by some banks (e.g., German Commerzbank) and "
+"may reduce costs with other banks. The sequence information will be set to "
+"\"one-off\" in this case for all payments. If this setting is disabled, each "
+"transfer is exported in a separate payment info segment having the sequence "
+"type set correctly (\"one-off\", \"first of a series of recurring payments"
+"\", \"recurring payment\")."
+msgstr ""
+"Auswählen, um alle Zahlungen in einem einzigen Payment Information Segment "
+"innerhalb der XML-Datei zu exportieren. Dies wird von einigen Banken (z.b. "
+"der deutschen Commerzbank) verlangt und kann die Kosten bei anderen Banken "
+"senken. Die sog. Sequenz Informationen werden in diesem Fall für alle "
+"Zahlungen auf \"einmalige Zahlung\" gesetzt. Wenn diese Einstellung "
+"deaktiviert ist, wird jede Übertragung in einem separaten Payment "
+"Information Segment exportiert, wobei der Sequenz Typ korrekt gesetzt ist "
+"(\"einmalige Zahlung\", \"erste einer Reihe von wiederkehrenden Zahlungen\", "
+"\"wiederkehrende Zahlung\")."
+
+#: WC_Gateway_SEPA_Direct_Debit.php:765
 msgid "Awaiting SEPA direct debit completion."
 msgstr "Warten auf die Fertigstellung der SEPA-Lastschrift."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:771
+#: WC_Gateway_SEPA_Direct_Debit.php:818
 msgid "John Doe"
 msgstr "Max Mustermann"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:776
+#: WC_Gateway_SEPA_Direct_Debit.php:823
 msgid "DE11222222223333333333"
 msgstr "DE11222222223333333333"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:783
+#: WC_Gateway_SEPA_Direct_Debit.php:830
 msgid "XXXXDEYYZZZ"
 msgstr "XXXXDEYYZZZ"
 
