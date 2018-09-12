@@ -8,8 +8,6 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
  * Time: 08:25
  */
 
-define("SEPA_DD_DIR", plugin_dir_path(__FILE__));
-
 spl_autoload_register(function ($className) {
     // Make sure the class included is in this plugins namespace
     if (substr($className, 0, 8) === "Digitick") {
@@ -33,6 +31,10 @@ use Digitick\Sepa\TransferFile\CustomerDirectDebitTransferFile;
 use Digitick\Sepa\TransferInformation\CustomerDirectDebitTransferInformation;
 
 require_once("sepa-checks.php");
+require_once("WC_Payment_Token_SepaDD.php");
+
+const SEPA_DD_DOMAIN = 'sepa-direct-debit';
+
 
 class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 {
@@ -41,7 +43,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     const SEPA_DD_ACCOUNT_HOLDER = '_sepa_dd_account_holder';
     const SEPA_DD_IBAN = '_sepa_dd_iban';
     const SEPA_DD_BIC = '_sepa_dd_bic';
-    const DOMAIN = 'sepa-direct-debit';
+    const DOMAIN = SEPA_DD_DOMAIN;
     const ORDER_TOTAL = '_order_total';
     const SHIPPING_FIRST_NAME = '_shipping_first_name';
     const SHIPPING_LAST_NAME = '_shipping_last_name';
@@ -54,7 +56,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     function __construct()
     {
         $this->id = self::GATEWAY_ID;
-        $this->supports = array('products');
+        $this->supports = array(
+            'products', 
+            'tokenization'
+        );
         if (!self::isSubscriptions1x()) {
             $this->supports = array_merge($this->supports, array(
                 'subscriptions',
@@ -179,6 +184,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         );
         return $payment_meta;
     }
+
     /**
      * Validate the payment meta data required to process automatic recurring payments so that store managers can
      * manually set up automatic recurring payments for a customer via the Edit Subscription screen in Subscriptions 2.0+.
@@ -278,7 +284,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      */
     public static function remove_renewal_order_meta( $order_meta_query, $original_order, $renewal_order ) {
         $order_meta_query .= " AND `meta_key` NOT IN ("
-            .		"'" . self::SEPA_DD_EXPORTED ."')";
+            .       "'" . self::SEPA_DD_EXPORTED ."')";
         return $order_meta_query;
     }
 
@@ -753,6 +759,30 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $bic = strtoupper($bic);
         }
 
+        // check for use of stored payment method - if it is set, use payment info stored in 
+        // token to overwrite the one read from post data (should be NULL in this case).
+        $payment_token = $this->get_post('wc-' . $this->id . '-payment-token');
+        if ( isset($payment_token ) && 'new' !== $payment_token ) {
+            $token_id = wc_clean( $payment_token );
+            $token    = WC_Payment_Tokens::get( $token_id );
+            // Token user ID does not match the current user... bail out of payment processing.
+            if ( $token->get_user_id() !== get_current_user_id() ) {
+                wc_add_notice( __( 'There was a problem retrieving the sepa payment information.', self::DOMAIN ), 'error' );
+                return;
+            }
+            $accountHolder = $token->get_account_holder();
+            $iban = $token->get_iban();
+            $bic = $token->get_bic();
+        }
+
+        // store new payment method if checkbox is selected
+        $store_new = $this->get_post('wc-' . $this->id . '-new-payment-method');
+        if ($store_new) {
+            if ( !isset($payment_token ) || 'new' === $payment_token ) {
+                $this->store_payment_token_from_post_data();
+            }
+        }
+
         $this->setSepaMetaData($order_id, $accountHolder, $iban, $bic);
 
         if (function_exists('wcs_get_subscriptions_for_order')) {
@@ -803,8 +833,21 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     /**
      * Output the payment fields as part of the checkout page.
      */
-    function payment_fields()
-    {
+        public function payment_fields() {
+        if ( $this->supports( 'tokenization' ) && is_checkout() ) {
+            $this->tokenization_script();
+            $this->saved_payment_methods();
+            $this->form();
+            $this->save_payment_method_checkbox();
+        } else {
+            $this->form();
+        }
+    }
+    /**
+     * Outputs fields for entering Sepa information.
+     *
+     */
+    public function form() {
         self::enqueue_validation_script();
 
         if ( $this->description ) {
@@ -813,22 +856,22 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         $fields = array(
             'account-holder' => '<p class="form-row form-row-wide">
-					<label for="' . esc_attr($this->id) . '-account-holder">' . __('Account holder', self::DOMAIN) . ' <span class="required">*</span></label>
-					<input id="' . esc_attr($this->id) . '-account-holder" class="input-text sepa-direct-debit-payment-field"
-						type="text" maxlength="30" autocomplete="off" placeholder="' . esc_attr__('John Doe', self::DOMAIN) . '" name="' . $this->id . '-account-holder' . '" />
-					</p>',
+                    <label for="' . esc_attr($this->id) . '-account-holder">' . __('Account holder', self::DOMAIN) . ' <span class="required">*</span></label>
+                    <input id="' . esc_attr($this->id) . '-account-holder" class="input-text sepa-direct-debit-payment-field"
+                        type="text" maxlength="30" autocomplete="off" placeholder="' . esc_attr__('John Doe', self::DOMAIN) . '" name="' . $this->id . '-account-holder' . '" />
+                    </p>',
             'iban' => '<p class="form-row form-row-wide">
-					<label for="' . esc_attr($this->id) . '-iban">' . __('IBAN', self::DOMAIN) . ' <span class="required">*</span></label>
-					<input id="' . esc_attr($this->id) . '-iban" class="input-text sepa-direct-debit-payment-field"
-						type="text" maxlength="31" autocomplete="off" placeholder="' . esc_attr__('DE11222222223333333333', self::DOMAIN) . '" name="' . $this->id . '-iban' . '" />
-					</p>'
+                    <label for="' . esc_attr($this->id) . '-iban">' . __('IBAN', self::DOMAIN) . ' <span class="required">*</span></label>
+                    <input id="' . esc_attr($this->id) . '-iban" class="input-text sepa-direct-debit-payment-field"
+                        type="text" maxlength="31" autocomplete="off" placeholder="' . esc_attr__('DE11222222223333333333', self::DOMAIN) . '" name="' . $this->id . '-iban' . '" />
+                    </p>'
         );
         if ($this->askForBIC()) {
             $fields['bic'] = '<p class="form-row form-row-wide">
-						<label for="' . esc_attr($this->id) . '-bic">' . __('BIC', self::DOMAIN) . ' <span class="required">*</span></label>
-						<input id="' . esc_attr($this->id) . '-bic" class="input-text sepa-direct-debit-payment-field"
-							type="text" maxlength="11" autocomplete="off" placeholder="' . esc_attr__('XXXXDEYYZZZ', self::DOMAIN) . '" name="' . $this->id . '-bic' . '" />
-						</p>';
+                        <label for="' . esc_attr($this->id) . '-bic">' . __('BIC', self::DOMAIN) . ' <span class="required">*</span></label>
+                        <input id="' . esc_attr($this->id) . '-bic" class="input-text sepa-direct-debit-payment-field"
+                            type="text" maxlength="11" autocomplete="off" placeholder="' . esc_attr__('XXXXDEYYZZZ', self::DOMAIN) . '" name="' . $this->id . '-bic' . '" />
+                        </p>';
         }
 
         ?>
@@ -842,6 +885,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         </fieldset>
         <?php
     }
+
+
+
 
     /**
      * Convenience function to get the post parameter or null in case it doesn't exist.
@@ -877,8 +923,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      **/
     function validate_fields()
     {
-
         $errors = array();
+        $payment_token = $this->get_post('wc-' . $this->id . '-payment-token');
+        if ( isset($payment_token) && 'new' !== $payment_token ) {
+            // if using stored payment method, do not check fields because they may remain empty/ 
+            // contain faulty data.
+            return true;
+        }
 
         $this->check_required_field($this->id . '-account-holder', __('Account holder', self::DOMAIN), $errors);
         $iban = $this->check_required_field($this->id . '-iban', __('IBAN', self::DOMAIN), $errors);
@@ -915,5 +966,47 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         update_post_meta($order_id, self::SEPA_DD_ACCOUNT_HOLDER, $accountHolder);
         update_post_meta($order_id, self::SEPA_DD_IBAN, $iban);
         update_post_meta($order_id, self::SEPA_DD_BIC, $bic);
+    }
+
+    /**
+     * Read payment data from post data and store in new payment token for current user.
+     * 
+     * @return boolean
+     */
+    public function store_payment_token_from_post_data() {
+        $token = new WC_Payment_Token_SepaDD();
+        $token->set_gateway_id( $this->id );
+ 
+        $account_holder = $this->get_post($this->id . '-account-holder');
+        $iban = $this->remove_white_space($this->get_post($this->id . '-iban'));
+        $iban = strtoupper($iban);
+        $bic = '';
+        if ($this->askForBIC()) {
+            $bic = $this->remove_white_space($this->get_post($this->id . '-bic'));
+            $bic = strtoupper($bic);
+        }
+
+        $token->set_iban( $iban );
+        $token->set_bic( $bic );
+        $token->set_account_holder( $account_holder );
+
+        $token->set_user_id( get_current_user_id() );
+        if (!$token->save()) {
+            wc_add_notice( __( 'There was a problem storing the sepa payment information.', self::DOMAIN ), 'error' );
+            return false;
+        }
+        return true;
+    }
+
+    /**
+    * @Store payment method in a WooCommerce token
+    */
+    public function add_payment_method() {
+        $success = $this->store_payment_token_from_post_data();
+
+        return array(
+            'result'   => $success ? 'success' : 'failure',
+            'redirect' => wc_get_endpoint_url( 'payment-methods' ),
+        );
     }
 }
