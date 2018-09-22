@@ -103,6 +103,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         add_action( 'admin_menu', __CLASS__ . '::register_sepa_xml_page', 10);
         add_filter( 'wcs_renewal_order_meta_query', __CLASS__ . '::remove_renewal_order_meta', 10, 4 );
         add_filter( 'wcs_renewal_order_meta', __CLASS__ . '::add_exported_to_renewal_order_meta', 10, 4 );
+        add_filter( 'woocommerce_email_order_meta', __CLASS__ . '::custom_woocommerce_email_order_meta', 10, 3 );
 
         add_action( 'add_meta_boxes', __CLASS__ . '::sepa_dd_add_meta_box' );
 
@@ -700,9 +701,21 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'default' => 'no'
             ),
             'single_payment_info' => array(
-                'title' => __('Export all transfers in single payment info segment.', self::DOMAIN),
+                'title' => __('Export all transfers in single payment info segment', self::DOMAIN),
                 'type' => 'checkbox',
                 'label' => __('Check this to export all payments in a single payment info segment within the XML file. This is required by some banks (e.g., German Commerzbank) and may reduce costs with other banks. The sequence information will be set to "one-off" in this case for all payments. If this setting is disabled, each transfer is exported in a separate payment info segment having the sequence type set correctly ("one-off", "first of a series of recurring payments", "recurring payment").', self::DOMAIN),
+                'default' => 'no'
+            ),
+            'payment_info_in_email' => array(
+                'title' => __('Include payment information in admin emails', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Check this to include account holder, IBAN and BIC (if requested, see setting above) in order emails sent to the shop admin.', self::DOMAIN),
+                'default' => 'no'
+            ),
+            'set_to_processing' => array(
+                'title' => __('Set order status to "Processing"', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Check this to set the order status to "Processing" immediately. Use this option if you want to start processing the order and trust the direct debit to be fulfilled later. The payment does not need to be entered manually in this case after the money has been transferred.', self::DOMAIN),
                 'default' => 'no'
             ),
         );
@@ -719,7 +732,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     /**
      * Returns, if BIC is required
      */
-    function askForBIC() {
+    public function askForBIC() {
         return isset( $this->settings['ask_for_BIC'] ) && ($this->settings['ask_for_BIC'] == 'yes');
     }
 
@@ -997,6 +1010,44 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         }
         return true;
     }
+
+    /**
+     * Adds payment information to admin emails if requested in the settings
+     * @param  Order $order         The order in question
+     * @param  boolean $sent_to_admin If the email is sent to a shop admin
+     * @param  boolean $is_plain_text plain text email?
+     * @return void
+     */
+    public static function custom_woocommerce_email_order_meta( $order, $sent_to_admin, $is_plain_text ) {
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        if ($sent_to_admin
+            && isset($gateway->settings['payment_info_in_email']) 
+            && $gateway->settings['payment_info_in_email']) { 
+
+            $iban = get_post_meta( $order->get_id(), self::SEPA_DD_IBAN, true );
+            $bic = get_post_meta( $order->get_id(), self::SEPA_DD_BIC, true );
+            $account_holder = get_post_meta( $order->get_id(), self::SEPA_DD_ACCOUNT_HOLDER, true );
+
+            if ( $is_plain_text ) {
+                echo __( 'PAYMENT INFORMATION', self::DOMAIN ) . "\n";
+                echo __( 'IBAN', self::DOMAIN ) . ": " . $iban . "\n";
+                if ($gateway->askForBIC()) {
+                    echo __( 'BIC', self::DOMAIN ) . ": " . $bic . "\n";
+                }
+                echo __( 'Account Holder', self::DOMAIN ) . ": " . $account_holder . "\n";
+            } else {         
+                // you shouldn't have to worry about inline styles, WooCommerce adds them itself depending on the theme you use
+                echo '<h2>' . __( 'Payment information', self::DOMAIN ) . '</h2>';
+                echo '<ul>';
+                echo '<li><strong>' . __( 'IBAN', self::DOMAIN ) . ':</strong>&nbsp;' . $iban . '</li>';
+                if ($gateway->askForBIC()) {
+                    echo '<li><strong>' . __( 'BIC', self::DOMAIN ) . ':</strong>&nbsp;' . $bic . '</li>';
+                }
+                echo '<li><strong>' . __( 'Account Holder', self::DOMAIN ) . ':</strong>&nbsp;' . $account_holder . '</li>';
+                echo '</ul>';
+            }
+        }
+    }    
 
     /**
     * @Store payment method in a WooCommerce token
