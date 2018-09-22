@@ -471,7 +471,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $payment->setDueDate(new \DateTime('tomorrow'));
         $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
         // COR1 no longer supported in pain.008.001.02
-        $cor1_enabled = $gateway->settings['export_as_COR1'] && ($painFormat != 'pain.008.001.02');
+        $cor1_enabled = ($gateway->settings['export_as_COR1'] === 'yes') && ($painFormat != 'pain.008.001.02');
         $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
         return $payment;
     }
@@ -516,7 +516,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         }
         $singlePaymentInfo = false;
         if (array_key_exists('single_payment_info', $gateway->settings)) {
-            $singlePaymentInfo = $gateway->settings['single_payment_info'];    
+            $singlePaymentInfo = ($gateway->settings['single_payment_info'] === 'yes');    
         }
         $payment = null;
 
@@ -733,7 +733,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * Returns, if BIC is required
      */
     public function askForBIC() {
-        return isset( $this->settings['ask_for_BIC'] ) && ($this->settings['ask_for_BIC'] == 'yes');
+        return isset( $this->settings['ask_for_BIC'] ) && ($this->settings['ask_for_BIC'] === 'yes');
     }
 
     /**
@@ -804,11 +804,17 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
         }
 
-        // Mark as on-hold (we're awaiting the Direct Debit)
-        $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
+        if (isset($this->settings['set_to_processing']) and ($this->settings['set_to_processing'] === "yes")) {
+            $order->payment_complete();
+            $order->add_order_note( __('Automatically marking payment complete due to payment gateway settings.', self::DOMAIN) );
 
-        // Reduce stock levels
-        $order->reduce_order_stock();
+        } else {
+            // Mark as on-hold (we're awaiting the Direct Debit)
+            $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
+
+            // Reduce stock levels
+            $order->reduce_order_stock();
+        }
 
         // Remove cart
         $woocommerce->cart->empty_cart();
@@ -1022,7 +1028,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
         if ($sent_to_admin
             && isset($gateway->settings['payment_info_in_email']) 
-            && $gateway->settings['payment_info_in_email']) { 
+            && $gateway->settings['payment_info_in_email'] === 'yes') { 
 
             $iban = get_post_meta( $order->get_id(), self::SEPA_DD_IBAN, true );
             $bic = get_post_meta( $order->get_id(), self::SEPA_DD_BIC, true );
