@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Sepa Direct Debit\n"
-"POT-Creation-Date: 2018-09-22 23:13+0200\n"
-"PO-Revision-Date: 2018-09-22 23:16+0200\n"
+"POT-Creation-Date: 2018-09-22 23:33+0200\n"
+"PO-Revision-Date: 2018-09-22 23:34+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -31,37 +31,37 @@ msgid "Creates PAIN.008 XML-files for WooCommerce payments."
 msgstr "Erstellt PAIN.008 XML-Dateien für WooCommerce Zahlungen."
 
 #: WC_Gateway_SEPA_Direct_Debit.php:174 WC_Gateway_SEPA_Direct_Debit.php:202
-#: WC_Gateway_SEPA_Direct_Debit.php:231 WC_Gateway_SEPA_Direct_Debit.php:872
-#: WC_Gateway_SEPA_Direct_Debit.php:947
+#: WC_Gateway_SEPA_Direct_Debit.php:231 WC_Gateway_SEPA_Direct_Debit.php:878
+#: WC_Gateway_SEPA_Direct_Debit.php:953
 msgid "Account holder"
 msgstr "Kontoinhaber"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:178 WC_Gateway_SEPA_Direct_Debit.php:206
 #: WC_Gateway_SEPA_Direct_Debit.php:240 WC_Gateway_SEPA_Direct_Debit.php:375
-#: WC_Gateway_SEPA_Direct_Debit.php:877 WC_Gateway_SEPA_Direct_Debit.php:948
-#: WC_Gateway_SEPA_Direct_Debit.php:1033 WC_Gateway_SEPA_Direct_Debit.php:1042
+#: WC_Gateway_SEPA_Direct_Debit.php:883 WC_Gateway_SEPA_Direct_Debit.php:954
+#: WC_Gateway_SEPA_Direct_Debit.php:1039 WC_Gateway_SEPA_Direct_Debit.php:1048
 msgid "IBAN"
 msgstr "IBAN"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:182 WC_Gateway_SEPA_Direct_Debit.php:213
 #: WC_Gateway_SEPA_Direct_Debit.php:249 WC_Gateway_SEPA_Direct_Debit.php:376
-#: WC_Gateway_SEPA_Direct_Debit.php:884 WC_Gateway_SEPA_Direct_Debit.php:954
-#: WC_Gateway_SEPA_Direct_Debit.php:1035 WC_Gateway_SEPA_Direct_Debit.php:1044
+#: WC_Gateway_SEPA_Direct_Debit.php:890 WC_Gateway_SEPA_Direct_Debit.php:960
+#: WC_Gateway_SEPA_Direct_Debit.php:1041 WC_Gateway_SEPA_Direct_Debit.php:1050
 msgid "BIC"
 msgstr "BIC"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:202 WC_Gateway_SEPA_Direct_Debit.php:206
-#: WC_Gateway_SEPA_Direct_Debit.php:213 WC_Gateway_SEPA_Direct_Debit.php:930
+#: WC_Gateway_SEPA_Direct_Debit.php:213 WC_Gateway_SEPA_Direct_Debit.php:936
 msgid "is a required field."
 msgstr "ist ein Pflichtfeld."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:209 WC_Gateway_SEPA_Direct_Debit.php:836
-#: WC_Gateway_SEPA_Direct_Debit.php:951
+#: WC_Gateway_SEPA_Direct_Debit.php:209 WC_Gateway_SEPA_Direct_Debit.php:842
+#: WC_Gateway_SEPA_Direct_Debit.php:957
 msgid "Please enter a valid IBAN."
 msgstr "Bitte geben Sie eine gültige IBAN ein."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:216 WC_Gateway_SEPA_Direct_Debit.php:837
-#: WC_Gateway_SEPA_Direct_Debit.php:957
+#: WC_Gateway_SEPA_Direct_Debit.php:216 WC_Gateway_SEPA_Direct_Debit.php:843
+#: WC_Gateway_SEPA_Direct_Debit.php:963
 msgid "Please enter a valid BIC."
 msgstr "Bitte geben Sie eine gültige BIC ein."
 
@@ -92,8 +92,8 @@ msgstr "Betrag"
 msgid "Shipping Name"
 msgstr "Name (Versandadresse)"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:374 WC_Gateway_SEPA_Direct_Debit.php:1037
-#: WC_Gateway_SEPA_Direct_Debit.php:1046
+#: WC_Gateway_SEPA_Direct_Debit.php:374 WC_Gateway_SEPA_Direct_Debit.php:1043
+#: WC_Gateway_SEPA_Direct_Debit.php:1052
 msgid "Account Holder"
 msgstr "Kontoinhaber"
 
@@ -287,11 +287,9 @@ msgstr ""
 "bevor Sie die Option aktivieren. Wird für pain.008.001.02 nicht verwendet."
 
 #: WC_Gateway_SEPA_Direct_Debit.php:704
-#, fuzzy
-#| msgid "Export all transfers in single payment info segment."
 msgid "Export all transfers in single payment info segment"
 msgstr ""
-"Alle Zahlungen in einem einzelnen Payment Info segment im XML exportieren."
+"Alle Zahlungen in einem einzelnen Payment Info segment im XML exportieren"
 
 #: WC_Gateway_SEPA_Direct_Debit.php:706
 msgid ""
@@ -347,32 +345,37 @@ msgstr ""
 msgid "There was a problem retrieving the sepa payment information."
 msgstr "Beim Laden der SEPA Zahlungsinformation ist ein Problem aufgetreten."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:808
+#: WC_Gateway_SEPA_Direct_Debit.php:809
+msgid "Automatically marking payment complete due to payment gateway settings."
+msgstr ""
+"Automatisch als bezahlt markieren aufgrund Zahlungsgateway-Einstellungen."
+
+#: WC_Gateway_SEPA_Direct_Debit.php:813
 msgid "Awaiting SEPA direct debit completion."
 msgstr "Warten auf die Fertigstellung der SEPA-Lastschrift."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:874
+#: WC_Gateway_SEPA_Direct_Debit.php:880
 msgid "John Doe"
 msgstr "Max Mustermann"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:879
+#: WC_Gateway_SEPA_Direct_Debit.php:885
 msgid "DE11222222223333333333"
 msgstr "DE11222222223333333333"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:886
+#: WC_Gateway_SEPA_Direct_Debit.php:892
 msgid "XXXXDEYYZZZ"
 msgstr "XXXXDEYYZZZ"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:1008
+#: WC_Gateway_SEPA_Direct_Debit.php:1014
 msgid "There was a problem storing the sepa payment information."
 msgstr ""
 "Beim Speichern der SEPA Zahlungsinformation ist ein Problem aufgetreten."
 
-#: WC_Gateway_SEPA_Direct_Debit.php:1032
+#: WC_Gateway_SEPA_Direct_Debit.php:1038
 msgid "PAYMENT INFORMATION"
 msgstr "ZAHLUNGSINFORMATION"
 
-#: WC_Gateway_SEPA_Direct_Debit.php:1040
+#: WC_Gateway_SEPA_Direct_Debit.php:1046
 msgid "Payment information"
 msgstr "Zahlungsinformation"
 
