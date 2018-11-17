@@ -24,7 +24,6 @@ namespace Digitick\Sepa\DomBuilder;
 
 use Digitick\Sepa\GroupHeader;
 
-
 abstract class BaseDomBuilder implements DomBuilderInterface
 {
     /**
@@ -51,16 +50,21 @@ abstract class BaseDomBuilder implements DomBuilderInterface
 
     /**
      * @param string $painFormat Supported format: 'pain.001.002.03', 'pain.001.001.03', 'pain.008.002.02', 'pain.008.001.02'
+     * @param boolean $withSchemaLocation define if xsi:schemaLocation tag is added to root
      */
-    function __construct($painFormat)
+    public function __construct($painFormat, $withSchemaLocation = true)
     {
         $this->painFormat = $painFormat;
         $this->doc = new \DOMDocument('1.0', 'UTF-8');
         $this->doc->formatOutput = true;
         $this->root = $this->doc->createElement('Document');
-        $this->root->setAttribute('xmlns', sprintf("urn:iso:std:iso:20022:tech:xsd:%s", $painFormat));
-        $this->root->setAttribute('xmlns:xsi', "http://www.w3.org/2001/XMLSchema-instance");
-        $this->root->setAttribute('xsi:schemaLocation', "urn:iso:std:iso:20022:tech:xsd:$painFormat $painFormat.xsd");
+        $this->root->setAttribute('xmlns', sprintf('urn:iso:std:iso:20022:tech:xsd:%s', $painFormat));
+        $this->root->setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+
+        if ($withSchemaLocation) {
+            $this->root->setAttribute('xsi:schemaLocation', "urn:iso:std:iso:20022:tech:xsd:$painFormat $painFormat.xsd");
+        }
+
         $this->doc->appendChild($this->root);
     }
 
@@ -71,7 +75,7 @@ abstract class BaseDomBuilder implements DomBuilderInterface
      */
     protected function createElement($name, $value = null)
     {
-        if ($value) {
+        if ($value !== null) {
             $elm = $this->doc->createElement($name);
             $elm->appendChild($this->doc->createTextNode($value));
 
@@ -94,7 +98,7 @@ abstract class BaseDomBuilder implements DomBuilderInterface
      */
     protected function intToCurrency($amount)
     {
-        return sprintf("%01.2F", ($amount / 100));
+        return sprintf('%01.2F', ($amount / 100));
     }
 
     /**
@@ -129,7 +133,6 @@ abstract class BaseDomBuilder implements DomBuilderInterface
         $this->currentTransfer->appendChild($groupHeaderTag);
     }
 
-
     /**
      * @param string $bic
      * @return \DOMElement
@@ -137,8 +140,8 @@ abstract class BaseDomBuilder implements DomBuilderInterface
     protected function getFinancialInstitutionElement($bic)
     {
         $finInstitution = $this->createElement('FinInstnId');
-        
-        if(!$bic) {
+
+        if ($bic === null) {
             $other = $this->createElement('Othr');
             $id = $this->createElement('Id', 'NOTPROVIDED');
             $other->appendChild($id);
@@ -146,11 +149,9 @@ abstract class BaseDomBuilder implements DomBuilderInterface
         } else {
             $finInstitution->appendChild($this->createElement('BIC', $bic));
         }
-        
 
         return $finInstitution;
     }
-
 
     /**
      * @param string $iban
@@ -164,16 +165,46 @@ abstract class BaseDomBuilder implements DomBuilderInterface
         return $id;
     }
 
-
     /**
-     * @param string $remittenceInformation
+     * Create remittance element with un-structured message.
+     *
+     * @param string $message
      * @return \DOMElement
      */
-    public function getRemittenceElement($remittenceInformation)
+    public function getRemittenceElement($message)
     {
         $remittanceInformation = $this->createElement('RmtInf');
-        $remittanceInformation->appendChild($this->createElement('Ustrd', $remittenceInformation));
+        $remittanceInformation->appendChild($this->createElement('Ustrd', $message));
 
         return $remittanceInformation;
     }
+
+    /**
+     * Create remittance element with structured creditor reference.
+     *
+     * @param string $creditorReference
+     * @return \DOMElement
+     */
+    public function getStructuredRemittanceElement($creditorReference)
+    {
+        $remittanceInformation = $this->createElement('RmtInf');
+
+        $structured = $this->createElement('Strd');
+        $creditorReferenceInformation = $this->createElement('CdtrRefInf');
+
+        $tp = $this->createElement('Tp');
+        $CdOrPrtry = $this->createElement('CdOrPrtry');
+        $CdOrPrtry->appendChild($this->createElement('Cd', 'SCOR'));
+        $tp->appendChild($CdOrPrtry);
+
+        $reference = $this->createElement('Ref', $creditorReference);
+
+        $creditorReferenceInformation->appendChild($tp);
+        $creditorReferenceInformation->appendChild($reference);
+        $structured->appendChild($creditorReferenceInformation);
+        $remittanceInformation->appendChild($structured);
+
+        return $remittanceInformation;
+    }
+
 }

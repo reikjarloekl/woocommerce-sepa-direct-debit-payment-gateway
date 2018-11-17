@@ -46,12 +46,18 @@ class GroupHeader
      */
     protected $initiatingPartyId;
 
-	/**
-	 * The Issuer.
-	 *
-	 * @var string
-	 */
-	protected $issuer;
+    /**
+     * Name of the identification scheme, in a coded form as published in an external list. 1-4 characters.
+     * @var string
+     */
+    public $initiatingPartyIdentificationScheme;
+
+    /**
+     * The Issuer.
+     *
+     * @var string
+     */
+    protected $issuer;
 
     /**
      * @var int
@@ -86,7 +92,7 @@ class GroupHeader
      * @param string $initiatingPartyName
      * @param boolean $isTest
      */
-    function __construct($messageIdentification, $initiatingPartyName, $isTest = false)
+    public function __construct($messageIdentification, $initiatingPartyName, $isTest = false)
     {
         $this->messageIdentification = $messageIdentification;
         $this->isTest = $isTest;
@@ -131,21 +137,37 @@ class GroupHeader
         return $this->initiatingPartyId;
     }
 
-	/**
-	 * @return string
-	 */
-	public function getIssuer()
-	{
-		return $this->issuer;
-	}
+    /**
+     * @param string $id
+     */
+    public function setInitiatingPartyIdentificationScheme($scheme)
+    {
+        $this->initiatingPartyIdentificationScheme = StringHelper::sanitizeString($scheme);
+    }
 
-	/**
-	 * @param string $issuer
-	 */
-	public function setIssuer($issuer)
-	{
-		$this->issuer = $issuer;
-	}
+    /**
+     * @return string
+     */
+    public function getInitiatingPartyIdentificationScheme()
+    {
+        return $this->initiatingPartyIdentificationScheme;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIssuer()
+    {
+        return $this->issuer;
+    }
+
+    /**
+     * @param string $issuer
+     */
+    public function setIssuer($issuer)
+    {
+        $this->issuer = $issuer;
+    }
 
     /**
      * @param string $initiatingPartyName

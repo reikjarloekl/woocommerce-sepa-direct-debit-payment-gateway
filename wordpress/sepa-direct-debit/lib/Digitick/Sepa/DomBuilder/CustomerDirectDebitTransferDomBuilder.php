@@ -22,14 +22,11 @@
 
 namespace Digitick\Sepa\DomBuilder;
 
-use Digitick\Sepa\TransferFile\CustomerCreditTransferFile;
-use Digitick\Sepa\TransferFile\CustomerDirectDebitTransferFile;
 use Digitick\Sepa\TransferInformation\CustomerDirectDebitTransferInformation;
 use Digitick\Sepa\TransferInformation\TransferInformationInterface;
 use Digitick\Sepa\PaymentInformation;
 use Digitick\Sepa\TransferFile\TransferFileInterface;
 use Digitick\Sepa\GroupHeader;
-
 
 class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
 {
@@ -42,7 +39,7 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
     /**
      * Build the root of the document
      *
-     * @param TransferFileInterface $transferFile
+     * @param  TransferFileInterface $transferFile
      * @return mixed
      */
     public function visitTransferFile(TransferFileInterface $transferFile)
@@ -54,7 +51,7 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
     /**
      * Crawl PaymentInformation containing the Transactions
      *
-     * @param PaymentInformation $paymentInformation
+     * @param  PaymentInformation $paymentInformation
      * @return mixed
      */
     public function visitPaymentInformation(PaymentInformation $paymentInformation)
@@ -62,6 +59,11 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
         $this->currentPayment = $this->createElement('PmtInf');
         $this->currentPayment->appendChild($this->createElement('PmtInfId', $paymentInformation->getId()));
         $this->currentPayment->appendChild($this->createElement('PmtMtd', $paymentInformation->getPaymentMethod()));
+
+        if ($paymentInformation->getBatchBooking() !== null) {
+            $this->currentPayment->appendChild($this->createElement('BtchBookg', $paymentInformation->getBatchBooking() ? 'true' : 'false'));
+        }
+
         $this->currentPayment->appendChild(
             $this->createElement('NbOfTxs', $paymentInformation->getNumberOfTransactions())
         );
@@ -71,6 +73,10 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
         );
 
         $paymentTypeInformation = $this->createElement('PmtTpInf');
+        if ($paymentInformation->getInstructionPriority() && $this->painFormat === 'pain.008.001.02') {
+            $instructionPriority = $this->createElement('InstrPrty', $paymentInformation->getInstructionPriority());
+            $paymentTypeInformation->appendChild($instructionPriority);
+        }
         $serviceLevel = $this->createElement('SvcLvl');
         $serviceLevel->appendChild($this->createElement('Cd', 'SEPA'));
         $paymentTypeInformation->appendChild($serviceLevel);
@@ -97,11 +103,9 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
         $this->currentPayment->appendChild($creditorAccount);
 
         // <CdtrAgt>
-        if ($paymentInformation->getOriginAgentBIC()) {
-            $creditorAgent = $this->createElement('CdtrAgt');
-            $creditorAgent->appendChild($this->getFinancialInstitutionElement($paymentInformation->getOriginAgentBIC()));
-            $this->currentPayment->appendChild($creditorAgent);
-        }
+        $creditorAgent = $this->createElement('CdtrAgt');
+        $creditorAgent->appendChild($this->getFinancialInstitutionElement($paymentInformation->getOriginAgentBIC()));
+        $this->currentPayment->appendChild($creditorAgent);
 
         $this->currentPayment->appendChild($this->createElement('ChrgBr', 'SLEV'));
 
@@ -124,7 +128,7 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
     /**
      * Crawl Transactions
      *
-     * @param TransferInformationInterface $transactionInformation
+     * @param  TransferInformationInterface $transactionInformation
      * @return mixed
      */
     public function visitTransferInformation(TransferInformationInterface $transactionInformation)
@@ -164,44 +168,98 @@ class CustomerDirectDebitTransferDomBuilder extends BaseDomBuilder
 
         $debtor = $this->createElement('Dbtr');
         $debtor->appendChild($this->createElement('Nm', $transactionInformation->getDebitorName()));
+        if (in_array($this->painFormat, array('pain.008.003.02'))) {
+            $addPostalAddress = false;
+            $postalAddress = $this->createElement('PstlAdr');
+            if ((bool)$transactionInformation->getCountry()) {
+                $postalAddress->appendChild($this->createElement('Ctry', $transactionInformation->getCountry()));
+                $addPostalAddress = true;
+            }
+            if ((bool)$transactionInformation->getPostalAddress()) {
+                $postalAddressData = $transactionInformation->getPostalAddress();
+                if (is_array($postalAddressData)) {
+                    foreach($postalAddressData as $postalAddressLine) {
+                        $postalAddress->appendChild($this->createElement('AdrLine', $postalAddressLine));
+                    }
+                } else {
+                    $postalAddress->appendChild($this->createElement('AdrLine', $postalAddressData));
+                }
+                $addPostalAddress = true;
+            }
+            if ($addPostalAddress) {
+                $debtor->appendChild($postalAddress);
+            }
+        }
         $directDebitTransactionInformation->appendChild($debtor);
 
         $debtorAccount = $this->createElement('DbtrAcct');
         $debtorAccount->appendChild($this->getIbanElement($transactionInformation->getIban()));
         $directDebitTransactionInformation->appendChild($debtorAccount);
 
-        $directDebitTransactionInformation->appendChild(
-            $this->getRemittenceElement($transactionInformation->getRemittanceInformation())
-        );
-        $this->currentPayment->appendChild($directDebitTransactionInformation);
+        if (strlen($transactionInformation->getCreditorReference()) > 0)
+        {
+            $directDebitTransactionInformation->appendChild(
+                $this->getStructuredRemittanceElement($transactionInformation->getCreditorReference())
+            );
+        } else {
+            $directDebitTransactionInformation->appendChild(
+                $this->getRemittenceElement($transactionInformation->getRemittanceInformation())
+            );
+        }
 
+        if ($transactionInformation->hasAmendments()) {
+            $amendmentIndicator = $this->createElement('AmdmntInd', 'true');
+            $mandateRelatedInformation->appendChild($amendmentIndicator);
+
+            $amendmentInformationDetails = $this->createElement('AmdmntInfDtls');
+
+            if ($transactionInformation->hasAmendedDebtorAccount() || $transactionInformation->getOriginalDebtorIban() !== null) {
+                $originalDebtorAccount = $this->createElement('OrgnlDbtrAcct');
+                $identification = $this->createElement('Id');
+                $other = $this->createElement('Othr');
+                // Same Mandate New Debtor Account
+                $id = $this->createElement('Id', 'SMNDA');
+
+                $other->appendChild($id);
+                $identification->appendChild($other);
+                $originalDebtorAccount->appendChild($identification);
+                $amendmentInformationDetails->appendChild($originalDebtorAccount);
+            }
+
+            if ($transactionInformation->getOriginalMandateId() !== null) {
+                $originalMandateId = $this->createElement('OrgnlMndtId', $transactionInformation->getOriginalMandateId());
+                $amendmentInformationDetails->appendChild($originalMandateId);
+            }
+
+            $mandateRelatedInformation->appendChild($amendmentInformationDetails);
+        }
+
+        $this->currentPayment->appendChild($directDebitTransactionInformation);
     }
 
+    /**
+     * Add the specific OrgId element for the format 'pain.008.001.02'
+     *
+     * @param  GroupHeader $groupHeader
+     * @return mixed
+     */
+    public function visitGroupHeader(GroupHeader $groupHeader)
+    {
+        parent::visitGroupHeader($groupHeader);
 
-	/**
-	 * Add the specific OrgId element for the format 'pain.008.001.02'
-	 *
-	 * @param  GroupHeader $groupHeader
-	 * @return mixed
-	 */
-	public function visitGroupHeader(GroupHeader $groupHeader)
-	{
-		parent::visitGroupHeader($groupHeader);
+        if ($groupHeader->getInitiatingPartyId() !== null && in_array($this->painFormat , array('pain.008.001.02','pain.008.003.02'))) {
+            $newId = $this->createElement('Id');
+            $orgId = $this->createElement('OrgId');
+            $othr  = $this->createElement('Othr');
+            $othr->appendChild($this->createElement('Id', $groupHeader->getInitiatingPartyId()));
+            $orgId->appendChild($othr);
+            $newId->appendChild($orgId);
 
-		if ($groupHeader->getInitiatingPartyId() !== null && $this->painFormat === 'pain.008.001.02') {
-			$newId = $this->createElement('Id');
-			$orgId = $this->createElement('OrgId');
-			$othr  = $this->createElement('Othr');
-			$othr->appendChild($this->createElement('Id', $groupHeader->getInitiatingPartyId()));
-			$orgId->appendChild($othr);
-			$newId->appendChild($orgId);
+            $xpath = new \DOMXpath($this->doc);
+            $items = $xpath->query('GrpHdr/InitgPty/Id', $this->currentTransfer);
+            $oldId = $items->item(0);
 
-			$xpath = new \DOMXpath($this->doc);
-			$items = $xpath->query('GrpHdr/InitgPty/Id', $this->currentTransfer);
-			$oldId = $items->item(0);
-
-			$oldId->parentNode->replaceChild($newId, $oldId);
-		}
-	}
-
+            $oldId->parentNode->replaceChild($newId, $oldId);
+        }
+    }
 }
