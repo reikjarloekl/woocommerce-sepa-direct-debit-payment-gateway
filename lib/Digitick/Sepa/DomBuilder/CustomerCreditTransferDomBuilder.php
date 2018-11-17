@@ -23,14 +23,22 @@
 namespace Digitick\Sepa\DomBuilder;
 
 use Digitick\Sepa\PaymentInformation;
-use Digitick\Sepa\TransferFile\CustomerCreditTransferFile;
 use Digitick\Sepa\TransferFile\TransferFileInterface;
 use Digitick\Sepa\GroupHeader;
 use Digitick\Sepa\TransferInformation\CustomerCreditTransferInformation;
 use Digitick\Sepa\TransferInformation\TransferInformationInterface;
 
+/**
+ * Class CustomerCreditTransferDomBuilder
+ */
 class CustomerCreditTransferDomBuilder extends BaseDomBuilder
 {
+
+    /**
+     * CustomerCreditTransferDomBuilder constructor
+     *
+     * @param string $painFormat
+     */
     function __construct($painFormat = 'pain.001.002.03')
     {
         parent::__construct($painFormat);
@@ -60,8 +68,8 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         $this->currentPayment->appendChild($this->createElement('PmtInfId', $paymentInformation->getId()));
         $this->currentPayment->appendChild($this->createElement('PmtMtd', $paymentInformation->getPaymentMethod()));
 
-        if($paymentInformation->getBatchBooking() !== null) {
-            $this->currentPayment->appendChild($this->createElement('BtchBookg', $paymentInformation->getBatchBooking()));
+        if ($paymentInformation->getBatchBooking() !== null) {
+            $this->currentPayment->appendChild($this->createElement('BtchBookg', $paymentInformation->getBatchBooking() ? 'true' : 'false'));
         }
 
         $this->currentPayment->appendChild(
@@ -73,6 +81,10 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         );
 
         $paymentTypeInformation = $this->createElement('PmtTpInf');
+        if ($paymentInformation->getInstructionPriority()) {
+            $instructionPriority = $this->createElement('InstrPrty', $paymentInformation->getInstructionPriority());
+            $paymentTypeInformation->appendChild($instructionPriority);
+        }
         $serviceLevel = $this->createElement('SvcLvl');
         $serviceLevel->appendChild($this->createElement('Cd', 'SEPA'));
         $paymentTypeInformation->appendChild($serviceLevel);
@@ -94,6 +106,14 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         $debtor->appendChild($this->createElement('Nm', $paymentInformation->getOriginName()));
         $this->currentPayment->appendChild($debtor);
 
+        if ($paymentInformation->getOriginBankPartyIdentification() !== null && $this->painFormat === 'pain.001.001.03') {
+            $organizationId = $this->getOrganizationIdentificationElement(
+                $paymentInformation->getOriginBankPartyIdentification(),
+                $paymentInformation->getOriginBankPartyIdentificationScheme());
+
+            $debtor->appendChild($organizationId);
+        }
+
         $debtorAccount = $this->createElement('DbtrAcct');
         $id = $this->createElement('Id');
         $id->appendChild($this->createElement('IBAN', $paymentInformation->getOriginAccountIBAN()));
@@ -104,8 +124,7 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         $this->currentPayment->appendChild($debtorAccount);
 
         $debtorAgent = $this->createElement('DbtrAgt');
-        $financialInstitutionId = $this->createElement('FinInstnId');
-        $financialInstitutionId->appendChild($this->createElement('BIC', $paymentInformation->getOriginAgentBIC()));
+        $financialInstitutionId = $this->getFinancialInstitutionElement($paymentInformation->getOriginAgentBIC());
         $debtorAgent->appendChild($financialInstitutionId);
         $this->currentPayment->appendChild($debtorAgent);
 
@@ -164,8 +183,14 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         $CdtTrfTxInf->appendChild($creditorAccount);
 
         // remittance 2.98 2.99
-        $remittanceInformation = $this->getRemittenceElement($transactionInformation->getRemittanceInformation());
-        $CdtTrfTxInf->appendChild($remittanceInformation);
+        if (strlen($transactionInformation->getCreditorReference()) > 0)
+        {
+            $remittanceInformation = $this->getStructuredRemittanceElement($transactionInformation->getCreditorReference());
+            $CdtTrfTxInf->appendChild($remittanceInformation);
+        } elseif (strlen($transactionInformation->getRemittanceInformation()) > 0) {
+            $remittanceInformation = $this->getRemittenceElement($transactionInformation->getRemittanceInformation());
+            $CdtTrfTxInf->appendChild($remittanceInformation);
+        }
 
         $this->currentPayment->appendChild($CdtTrfTxInf);
     }
@@ -181,23 +206,47 @@ class CustomerCreditTransferDomBuilder extends BaseDomBuilder
         parent::visitGroupHeader($groupHeader);
 
         if ($groupHeader->getInitiatingPartyId() !== null && $this->painFormat === 'pain.001.001.03') {
-            $newId = $this->createElement('Id');
-            $orgId = $this->createElement('OrgId');
-            $othr  = $this->createElement('Othr');
-            $othr->appendChild($this->createElement('Id', $groupHeader->getInitiatingPartyId()));
-
-            if ($groupHeader->getIssuer()) {
-                $othr->appendChild($this->createElement('Issr', $groupHeader->getIssuer()));
-            }
-
-            $orgId->appendChild($othr);
-            $newId->appendChild($orgId);
+            $organizationId = $this->getOrganizationIdentificationElement(
+                $groupHeader->getInitiatingPartyId(),
+                $groupHeader->getInitiatingPartyIdentificationScheme(),
+                $groupHeader->getIssuer());
 
             $xpath = new \DOMXpath($this->doc);
             $items = $xpath->query('GrpHdr/InitgPty/Id', $this->currentTransfer);
             $oldId = $items->item(0);
 
-            $oldId->parentNode->replaceChild($newId, $oldId);
+            $oldId->parentNode->replaceChild($organizationId, $oldId);
         }
+    }
+
+    /**
+     * Creates Id element used in Group header and Debtor elements.
+     *
+     * @param  string      $id         Unique and unambiguous identification of a party. Length 1-35
+     * @param  string|null $schemeCode Name of the identification scheme. Length 1-4 or null
+     * @param  string|null $issr       Issuer
+     * @return \DOMElement
+     */
+    protected function getOrganizationIdentificationElement($id, $schemeCode = null, $issr = null)
+    {
+        $newId = $this->createElement('Id');
+        $orgId = $this->createElement('OrgId');
+        $othr  = $this->createElement('Othr');
+        $othr->appendChild($this->createElement('Id', $id));
+
+        if ($issr) {
+            $othr->appendChild($this->createElement('Issr', $issr));
+        }
+
+        if ($schemeCode) {
+            $schmeNm = $this->createElement('SchmeNm');
+            $schmeNm->appendChild($this->createElement('Cd', $schemeCode));
+            $othr->appendChild($schmeNm);
+        }
+
+        $orgId->appendChild($othr);
+        $newId->appendChild($orgId);
+
+        return $newId;
     }
 }

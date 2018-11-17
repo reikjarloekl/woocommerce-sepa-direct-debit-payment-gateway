@@ -23,7 +23,7 @@
 namespace Digitick\Sepa;
 
 use Digitick\Sepa\DomBuilder\DomBuilderInterface;
-use Digitick\Sepa\Exception\InvalidPaymentMethodException;
+use Digitick\Sepa\Exception\InvalidArgumentException;
 use Digitick\Sepa\TransferInformation\TransferInformationInterface;
 use Digitick\Sepa\Util\StringHelper;
 
@@ -65,6 +65,18 @@ class PaymentInformation
     public $originName;
 
     /**
+     * Unique identification of an organisation, as assigned by an institution, using an identification scheme.
+     * @var string
+     */
+    public $originBankPartyIdentification;
+
+    /**
+     * Name of the identification scheme, in a coded form as published in an external list. 1-4 characters.
+     * @var string
+     */
+    public $originBankPartyIdentificationScheme;
+
+    /**
      * @var string Debtor's account IBAN.
      */
     public $originAccountIBAN;
@@ -97,6 +109,11 @@ class PaymentInformation
     protected $dueDate;
 
     /**
+     * @var string Instruction priority.
+     */
+    protected $instructionPriority;
+
+    /**
      * @var integer
      */
     protected $controlSumCents = 0;
@@ -109,7 +126,7 @@ class PaymentInformation
     /**
      * @var array<TransferInformationInterface>
      */
-    protected $transfers;
+    protected $transfers = array();
 
     /**
      * Valid Payment Methods set by the TransferFile
@@ -136,13 +153,23 @@ class PaymentInformation
     protected $batchBooking = null;
 
     /**
+     * @var \DateTime
+     */
+    protected $mandateSignDate;
+
+    /**
+     * @var string
+     */
+    protected $dateFormat = 'Y-m-d';
+
+    /**
      * @param string $id
      * @param string $originAccountIBAN This is your IBAN
      * @param string $originAgentBIC This is your BIC
      * @param string $originName This is your Name
      * @param string $originAccountCurrency
      */
-    function __construct($id, $originAccountIBAN, $originAgentBIC, $originName, $originAccountCurrency = 'EUR')
+    public function __construct($id, $originAccountIBAN, $originAgentBIC, $originName, $originAccountCurrency = 'EUR')
     {
         $this->id = $id;
         $this->originAccountIBAN = $originAccountIBAN;
@@ -248,11 +275,31 @@ class PaymentInformation
     }
 
     /**
-     * @return \DateTime
+     * @return string
      */
     public function getDueDate()
     {
-        return $this->dueDate->format('Y-m-d');
+        return $this->dueDate->format($this->dateFormat);
+    }
+
+    /**
+     * @param string $instructionPriority
+     */
+    public function setInstructionPriority($instructionPriority)
+    {
+        $instructionPriority = strtoupper($instructionPriority);
+        if (!in_array($instructionPriority, array('NORM', 'HIGH'))) {
+            throw new InvalidArgumentException("Invalid Instruction Priority: $instructionPriority");
+        }
+        $this->instructionPriority = $instructionPriority;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInstructionPriority()
+    {
+        return $this->instructionPriority;
     }
 
     /**
@@ -285,6 +332,38 @@ class PaymentInformation
     public function getOriginName()
     {
         return $this->originName;
+    }
+
+    /**
+     * @param string $id
+     */
+    public function setOriginBankPartyIdentification($id)
+    {
+        $this->originBankPartyIdentification = StringHelper::sanitizeString($id);
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginBankPartyIdentification()
+    {
+        return $this->originBankPartyIdentification;
+    }
+
+    /**
+     * @param string $id
+     */
+    public function setOriginBankPartyIdentificationScheme($scheme)
+    {
+        $this->originBankPartyIdentificationScheme = StringHelper::sanitizeString($scheme);
+    }
+
+    /**
+     * @return string
+     */
+    public function getOriginBankPartyIdentificationScheme()
+    {
+        return $this->originBankPartyIdentificationScheme;
     }
 
     /**
@@ -429,5 +508,13 @@ class PaymentInformation
     public function getBatchBooking()
     {
         return $this->batchBooking;
+    }
+
+    /**
+     * @param string $format
+     */
+    public function setDueDateFormat($format)
+    {
+        $this->dateFormat = $format;
     }
 }

@@ -65,7 +65,7 @@ class BaseTransferInformation implements TransferInformationInterface
     protected $EndToEndIdentification;
 
     /**
-     * @var
+     * @var string
      */
     protected $currency = 'EUR';
 
@@ -77,19 +77,38 @@ class BaseTransferInformation implements TransferInformationInterface
     protected $remittanceInformation;
 
     /**
+     * Structured creditor reference.
+     *
+     * @var string
+     */
+    protected $creditorReference;
+
+    /**
+     * @var string
+     */
+    protected $country;
+
+    /**
+     * @var string|array
+     */
+    protected $postalAddress;
+
+    /**
      * @param string $amount
      * @param string $iban
      * @param string $name
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct($amount, $iban, $name)
     {
         $amount += 0;
         if (is_float($amount)) {
-            if(!function_exists('bcscale')) {
+            if (!function_exists('bcscale')) {
                 throw new InvalidArgumentException('Using floats for amount is only possible with bcmath enabled');
             }
             bcscale(2);
-            $amount = (integer)bcmul($amount, 100);
+            $amount = (integer)bcmul(sprintf('%01.4F', $amount), '100');
         }
         $this->transferAmount = $amount;
         $this->iban = $iban;
@@ -160,15 +179,6 @@ class BaseTransferInformation implements TransferInformationInterface
         return $this->instructionId;
     }
 
-
-    /**
-     * @param string $iban
-     */
-    public function setIban($iban)
-    {
-        $this->iban = $iban;
-    }
-
     /**
      * @return string
      */
@@ -194,6 +204,22 @@ class BaseTransferInformation implements TransferInformationInterface
     }
 
     /**
+     * @param string $creditorReference
+     */
+    public function setCreditorReference($creditorReference)
+    {
+        $this->creditorReference = StringHelper::sanitizeString($creditorReference);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCreditorReference()
+    {
+        return $this->creditorReference;
+    }
+
+    /**
      * @param string $remittanceInformation
      */
     public function setRemittanceInformation($remittanceInformation)
@@ -209,4 +235,35 @@ class BaseTransferInformation implements TransferInformationInterface
         return $this->remittanceInformation;
     }
 
+    /**
+     * @return string
+     */
+    public function getCountry()
+    {
+        return $this->country;
+    }
+
+    /**
+     * @param string $country
+     */
+    public function setCountry($country)
+    {
+        $this->country = $country;
+    }
+
+    /**
+     * @return array|string
+     */
+    public function getPostalAddress()
+    {
+        return $this->postalAddress;
+    }
+
+    /**
+     * @param array|string $postalAddress
+     */
+    public function setPostalAddress($postalAddress)
+    {
+        $this->postalAddress = $postalAddress;
+    }
 }
