@@ -520,6 +520,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $singlePaymentInfo = ($gateway->settings['single_payment_info'] === 'yes');    
         }
         $payment = null;
+        $sequence = '';
 
         if ($singlePaymentInfo) {
             $payment = self::get_sepa_payment_info("paymentInfo", PaymentInformation::S_ONEOFF, $painFormat);
@@ -540,7 +541,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $wc_order = new WC_Order($order->ID);
             $order_number = trim(str_replace('#', '', $wc_order->get_order_number()));
             $transfer->setRemittanceInformation($remittance_info . sprintf(__('Order %d', self::DOMAIN), $order_number));
-            if (!$singlePaymentInfo) {
+            if ($singlePaymentInfo) {
+                // try and aggregate sequence infos - if all orders have the same, then use that, otherwise use One-Off
+                $sequence_for_this_order = self::get_sequence_for_order($order->ID);
+                if ($sequence === '') $sequence = $sequence_for_this_order;
+                if ($sequence !== $sequence_for_this_order) $sequence = PaymentInformation::S_ONEOFF; 
+            } else {
                 $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormat);
             }
             $payment->addTransfer($transfer);
@@ -549,6 +555,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
         }
         if ($singlePaymentInfo) {
+            $payment->setSequenceType($sequence);
             $sepaFile->addPaymentInformation($payment);
         }
         $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
