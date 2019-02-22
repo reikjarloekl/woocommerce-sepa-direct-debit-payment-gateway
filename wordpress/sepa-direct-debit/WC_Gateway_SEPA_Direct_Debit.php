@@ -343,9 +343,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         if (is_object($post)) {
             $post = $post->ID;
         }
+        $order = wc_get_order( $post );
 
         $result = array();
-        $result['total'] = get_post_meta($post, self::ORDER_TOTAL, true);
+        $result['total'] = wc_format_decimal( $order->get_total() - $order->get_total_refunded(), wc_get_price_decimals() ); 
         $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
         $result['is_from_parent'] = false;
         if (empty($result['account_holder'])) {
