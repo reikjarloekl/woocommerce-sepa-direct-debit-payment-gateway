@@ -812,10 +812,17 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
         }
 
+        $is_change_payment = false;
+        if (function_exists('wcs_is_subscription')) {
+            $is_change_payment = wcs_is_subscription($order_id);
+        }
         if (isset($this->settings['set_to_processing']) and ($this->settings['set_to_processing'] === "yes")) {
             $order->payment_complete();
             $order->add_order_note( __('Automatically marking payment complete due to payment gateway settings.', self::DOMAIN) );
 
+        } if ($is_change_payment) {
+            $order->payment_complete();
+            $order->add_order_note( __('Automatically marking payment complete due to payment change by customer.', self::DOMAIN) );
         } else {
             // Mark as on-hold (we're awaiting the Direct Debit)
             $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
