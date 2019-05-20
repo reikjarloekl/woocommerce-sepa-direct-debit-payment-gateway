@@ -474,6 +474,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         // COR1 no longer supported in pain.008.001.02
         $cor1_enabled = ($gateway->settings['export_as_COR1'] === 'yes') && ($painFormat != 'pain.008.001.02');
         $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
+        $payment = apply_filters('wc_gateway_sepa_direct_debit:get_sepa_payment_info', $payment, $id, $sequence, $painFormat);
         return $payment;
     }
 
@@ -549,6 +550,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             } else {
                 $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormat);
             }
+            $transfer = apply_filters('wc_gateway_sepa_direct_debit:export_xml:transfer', $transfer, $order);
             $payment->addTransfer($transfer);
             if (!$singlePaymentInfo) {
                 $sepaFile->addPaymentInformation($payment);
