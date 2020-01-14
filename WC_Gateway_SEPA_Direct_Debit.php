@@ -40,6 +40,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 {
     const GATEWAY_ID = 'sepa-direct-debit';
     const SEPA_DD_EXPORTED = '_sepa_dd_exported';
+    const SEPA_REFUND_EXPORTED = '_sepa_refund_exported';
+    const SEPA_REFUND_OK_TO_EXPORT = '_sepa_refund_ok_to_export';
     const SEPA_DD_ACCOUNT_HOLDER = '_sepa_dd_account_holder';
     const SEPA_DD_IBAN = '_sepa_dd_iban';
     const SEPA_DD_BIC = '_sepa_dd_bic';
@@ -58,7 +60,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $this->id = self::GATEWAY_ID;
         $this->supports = array(
             'products', 
-            'tokenization'
+            'tokenization',
+            'refunds'
         );
         if (!self::isSubscriptions1x()) {
             $this->supports = array_merge($this->supports, array(
@@ -318,6 +321,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function get_xml_dir() {
         return md5(wp_salt() . 'sepa-dd-plugin');
     }
+    private static function get_refund_xml_dir() {
+        return md5(wp_salt() . 'sepa-dd-plugin-refunds');
+    }
 
     /**
      * Returns the full path within wp-upload to export SEPA-XML-files to.
@@ -327,6 +333,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function get_xml_path() {
         $upload_dir = wp_upload_dir();
         $target_dir = $upload_dir['basedir'] . '/' . self::get_xml_dir();
+        if (false === wp_mkdir_p( $target_dir )) {
+            throw new Exception(sprintf(__('Could not create output path %s', self::DOMAIN), $target_dir));
+        }
+        return $target_dir;
+    }
+
+    private static function get_refund_xml_path() {
+        $upload_dir = wp_upload_dir();
+        $target_dir = $upload_dir['basedir'] . '/' . self::get_refund_xml_dir();
         if (false === wp_mkdir_p( $target_dir )) {
             throw new Exception(sprintf(__('Could not create output path %s', self::DOMAIN), $target_dir));
         }
@@ -359,6 +374,27 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         return $result;
     }
 
+
+    private static function get_refund_info($post) {
+        if (is_object($post)) {
+            $post = $post->ID;
+        }
+        $order = wc_get_order( $post );
+
+        $result = array();
+        $result['total'] = wc_format_decimal( $order->get_total_refunded(), wc_get_price_decimals() ); 
+        $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
+        $result['is_from_parent'] = false;
+        if (empty($result['account_holder'])) {
+            $post = WC_Gateway_SEPA_Direct_Debit::get_parent_order($post);
+            $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
+            $result['is_from_parent'] = true;
+        }
+        $result['iban'] = get_post_meta($post, self::SEPA_DD_IBAN, true);
+        $result['bic'] = get_post_meta($post, self::SEPA_DD_BIC, true);
+        return $result;
+    }
+
     /**
      * Output widefat striped table containing overview of all the orders including payment information.
      *
@@ -366,6 +402,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      */
     private static function output_orders_to_be_exported($orders) {
         ?>
+        <h1><?php esc_attr_e( 'Orders', self::DOMAIN ); ?></h1>
         <table class="widefat striped">
         <thead>
         <tr>
@@ -381,6 +418,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         <?php
         $all_names_match = true;
         foreach ($orders as $order) {
+            
             $payment_info = self::get_payment_info($order);
             $is_from_parent = $payment_info['is_from_parent'];
             $shipping_name = get_post_meta($order->ID, self::SHIPPING_FIRST_NAME, true) . ' ' . get_post_meta($order->ID, self::SHIPPING_LAST_NAME, true);
@@ -409,10 +447,70 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             && !empty($gateway->settings['target_account_holder'])
             && !empty($gateway->settings['creditor_id']);
         if ($all_target_info_set) {
-            echo '<form method="post" action=""><p class="submit"><input class="button-primary" type="submit" value="' . __("Export to SEPA XML", self::DOMAIN) . '"></p></form>';
+            echo '<form method="post" action=""><p class="submit"><input class="button-primary" type="submit" name="export_orders" value="' . __("Export Orders to SEPA XML", self::DOMAIN) . '"></p></form>';
         } else {
             echo '<div class="error"><p>' . __("Please setup the payment target information first in WooCommerce/Settings/Checkout/SEPA Direct Debit.", self::DOMAIN) . '</p></div>';
-            echo '<p class="submit"><input class="button-primary" type="submit" disabled value="' . __("Export to SEPA XML", self::DOMAIN) . '"></p>';
+            echo '<p class="submit"><input class="button-primary" type="submit" disabled value="' . __("Export Orders to SEPA XML", self::DOMAIN) . '"></p>';
+        }
+    }
+
+
+    private static function output_refunds_to_be_exported($orders) {
+        ?>
+        <hr />
+        <h1><?php esc_attr_e( 'Refunds', self::DOMAIN ); ?></h1>
+        <table class="widefat striped">
+        <thead>
+        <tr>
+            <th class="row-title"><?php esc_attr_e( 'Order', self::DOMAIN); ?></th>
+            <th><?php esc_attr_e( 'Amount', self::DOMAIN ); ?></th>
+            <th><?php esc_attr_e( 'Shipping Name', self::DOMAIN ); ?></th>
+            <th><?php esc_attr_e( 'Account Holder', self::DOMAIN ); ?></th>
+            <th><?php esc_attr_e( 'IBAN', self::DOMAIN ); ?></th>
+            <th><?php esc_attr_e( 'BIC', self::DOMAIN ); ?></th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php
+        $all_names_match = true;
+        foreach ($orders as $order) {
+            $parent_info = self::get_refund_info($order->ID);
+            $refund_info = wc_get_order( $order->ID );
+            // if(sizeof( $refund_info->get_refunds() ) > 0 ) return;
+        
+
+            $is_from_parent = $parent_info['is_from_parent'];
+            $shipping_name = get_post_meta($order->post_parent, self::SHIPPING_FIRST_NAME, true) . ' ' . get_post_meta($order->post_parent, self::SHIPPING_LAST_NAME, true);
+            $row_class = "";
+            if ($shipping_name != $parent_info['account_holder']) {
+                $row_class = "suspicious";
+                $all_names_match = false;
+            }
+            ?>
+            <tr class="<?= $row_class ?>">
+                <td class="row-title"><a href="<?php echo get_edit_post_link($order->ID); ?>">#<?= $order->ID ?></a></td>
+                <td><?php echo $parent_info['total'] ?> <?php //echo $refund_info->get_total_refunded() ?></td>
+                <td><?= $shipping_name ?></td>
+                <td><?= $parent_info['account_holder'] ?> <?php if ($is_from_parent) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
+                <td><?php echo $parent_info['iban']  ?> <?php if ($is_from_parent) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
+                <td><?php echo $parent_info['bic'] ?> <?php if ($is_from_parent) echo esc_attr_e( '(from parent order)', self::DOMAIN); ?></td>
+            </tr>
+        <?php
+        }
+        echo '</tbody></table>';
+        if (!$all_names_match)
+            echo '<div class="error"><p>' . __("For some orders, name of account holder does not match name in shipping address.", self::DOMAIN) . '</p></div>';
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        $all_target_info_set =
+            !empty($gateway->settings['target_bic'])
+            && !empty($gateway->settings['target_iban'])
+            && !empty($gateway->settings['target_account_holder'])
+            && !empty($gateway->settings['creditor_id']);
+        if ($all_target_info_set) {
+            echo '<form method="post" action=""><p class="submit"><input class="button-primary" type="submit" name="export_refunds" value="' . __("Export Refunds to SEPA XML", self::DOMAIN) . '"></p></form>';
+        } else {
+            echo '<div class="error"><p>' . __("Please setup the payment target information first in WooCommerce/Settings/Checkout/SEPA Direct Debit.", self::DOMAIN) . '</p></div>';
+            echo '<p class="submit"><input class="button-primary" type="submit" disabled value="' . __("Export Refunds to SEPA XML", self::DOMAIN) . '"></p>';
         }
     }
 
@@ -445,11 +543,28 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $base_url = $upload_dir['baseurl'];
         $ffs = self::sorted_dir(self::get_xml_path());
         if (empty($ffs)) return;
-        echo '<h3>'. __("SEPA XML-Files", self::DOMAIN) . '</h3>';
+        echo '<h3>'. __("SEPA Orders XML-Files", self::DOMAIN) . '</h3>';
         echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
         echo '<ul>';
         foreach($ffs as $ff){
             echo '<li><a href="' . $base_url .'/' . self::get_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
+    /**
+     * Scan output path and list all SEPA-XML-files previously generated.
+     */
+    private static function list_refund_xml_files() {
+        $upload_dir = wp_upload_dir();
+        $base_url = $upload_dir['baseurl'];
+        $ffs = self::sorted_dir(self::get_refund_xml_path());
+        if (empty($ffs)) return;
+        echo '<h3>'. __("SEPA Refunds XML-Files", self::DOMAIN) . '</h3>';
+        echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
+        echo '<ul>';
+        foreach($ffs as $ff){
+            echo '<li><a href="' . $base_url .'/' . self::get_refund_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
             echo '</li>';
         }
         echo '</ul>';
@@ -571,6 +686,70 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         return $filename;
     }
 
+
+    private static function export_refund_xml($orders) {
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
+        $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
+        $painFormatRefunds = 'pain.001.002.03';
+        if (array_key_exists('pain_format_refunds', $gateway->settings)) {
+            $painFormatRefunds = $gateway->settings['pain_format_refunds'];
+        }
+        $singlePaymentInfo = false;
+        if (array_key_exists('single_payment_info', $gateway->settings)) {
+            $singlePaymentInfo = ($gateway->settings['single_payment_info'] === 'yes');    
+        }
+        $payment = null;
+        $sequence = '';
+
+        if ($singlePaymentInfo) {
+            $payment = self::get_sepa_payment_info("paymentInfo", PaymentInformation::S_ONEOFF, $painFormatRefunds);
+        }
+        foreach($orders as &$order) {
+            $payment_info = self::get_refund_info($order);
+            $parts = preg_split('/\./', $payment_info['total']);
+            $amount = strval($parts[0]) * 100 + strval($parts[1]);
+            $transfer = new CustomerDirectDebitTransferInformation($amount, $payment_info['iban'], $payment_info['account_holder']);
+            if ($payment_info['bic'])
+                $transfer->setBic($payment_info['bic']);
+            $transfer->setMandateSignDate(new \DateTime($order->post_date));
+            $transfer->setMandateId($order->ID);
+            $remittance_info = "";
+            if (array_key_exists('remittance_info', $gateway->settings)) {
+                $remittance_info = $gateway->settings['remittance_info'] . " ";
+            }
+            $wc_order = new WC_Order($order->ID);
+            $order_number = trim(str_replace('#', '', $wc_order->get_order_number()));
+            $transfer->setRemittanceInformation($remittance_info . sprintf(__('Order %d', self::DOMAIN), $order_number));
+            if ($singlePaymentInfo) {
+                // try and aggregate sequence infos - if all orders have the same, then use that, otherwise use One-Off
+                $sequence_for_this_order = self::get_sequence_for_order($order->ID);
+                if ($sequence === '') $sequence = $sequence_for_this_order;
+                if ($sequence !== $sequence_for_this_order) $sequence = PaymentInformation::S_ONEOFF; 
+            } else {
+                $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormatRefunds);
+            }
+            $transfer = apply_filters('wc_gateway_sepa_direct_debit:export_xml:transfer', $transfer, $order);
+            $payment->addTransfer($transfer);
+            if (!$singlePaymentInfo) {
+                $sepaFile->addPaymentInformation($payment);
+            }
+        }
+        if ($singlePaymentInfo) {
+            $payment->setSequenceType($sequence);
+            $sepaFile->addPaymentInformation($payment);
+        }
+        $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormatRefunds);
+        $sepaFile->accept($domBuilder);
+        $xml = $domBuilder->asXml();
+        $now = new DateTime();
+        $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-Refund-'. $orders[0]->ID . '.xml';
+        if (false === file_put_contents(self::get_refund_xml_path() . "/" . $filename, $xml)) {
+            throw new Exception(sprintf(__('Could not create output file %s', self::DOMAIN), $filename));
+        }
+        return $filename;
+    }
+
     /**
      * Output the WooCommerce Settings page to list outstanding orders and previously generated SEPA-XML-files.
      */
@@ -594,9 +773,15 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         try {
 
             $orderStatus = array_keys(wc_get_order_statuses());
+
             // do not export cancelled orders.
             $key = array_search('wc-cancelled', $orderStatus);
             unset($orderStatus[$key]);
+            
+            // do not export refunded orders.
+            $ref = array_search('wc-refunded', $orderStatus);
+            unset($orderStatus[$ref]);
+
             $query = array(
                 'numberposts' => -1,
                 'post_type' => 'shop_order',
@@ -615,7 +800,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $to_be_exported = get_posts($query);
             $count = count($to_be_exported);
 
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export_orders'])) {
                 $filename = self::export_xml($to_be_exported);
                 foreach ($to_be_exported as $order) {
                     update_post_meta($order->ID, '_sepa_dd_exported', true);
@@ -633,6 +818,75 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
             echo "<div class=\"error notice\"><p>$msg</p></div>";
         }
+
+
+
+        // output the refunds
+        try {
+
+            $orderStatus = array_keys(wc_get_order_statuses());
+            
+            // do not export cancelled orders.
+            $key = array_search('wc-cancelled', $orderStatus);
+            unset($orderStatus[$key]);
+
+            $query_refunds = array(
+                'numberposts' => -1,
+                'post_type' => 'shop_order',
+                // 'post_status' => 'wc-refunded',
+                'post_status' => $orderStatus,
+                'meta_query' => array(
+                    array(
+                        'key' => self::PAYMENT_METHOD,
+                        'value' => 'sepa-direct-debit',
+                    ),
+                    array(
+                        'key' => '_sepa_dd_exported',
+                        'value' => true,
+                    ),
+                    // array(
+                    //     'key' => '_sepa_refund_ok_to_export',
+                    //     'value' => true,
+                    // ),
+                    array(
+                        // 'key' => '_order_total',
+                        'key' => '_refund_amount',
+                        'value' => 0,
+                        'compare' => '>',
+                        'type'    => 'NUMERIC'
+                    ),
+                    array(
+                        'key' => '_sepa_refund_exported',
+                        'value' => false,
+                    )
+                ),
+            );
+            $to_be_exported_refund = get_posts($query_refunds);
+            
+                // print_r($to_be_exported_refund);
+            
+            $count = count($to_be_exported_refund);
+
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export_refunds'])) {
+                $filename = self::export_refund_xml($to_be_exported_refund);
+                foreach ($to_be_exported_refund as $order) {
+                    update_post_meta($order->ID, '_sepa_refund_exported', true);
+                }
+                echo '<div class="updated"><p>' . sprintf(__("Exported %d refunds to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
+            } else {
+                if ($to_be_exported_refund) {
+                    self::output_refunds_to_be_exported($to_be_exported_refund);
+                } else {
+                    echo '<div class="notice"><p>' . __("No new refunds to export.", self::DOMAIN) . '</p></div>';
+                }
+            }
+            self::list_refund_xml_files();
+        } catch (Throwable $e) {
+            $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
+            echo "<div class=\"error notice\"><p>$msg</p></div>";
+        }
+
+        
     }
 
 
@@ -701,6 +955,16 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'options' => array(
                     'pain.008.003.02' => __('pain.008.003.02 (SEPA DK 2.7 to 2.9)', self::DOMAIN),
                     'pain.008.001.02' => __('pain.008.001.02 (SEPA DK from 3.0)', self::DOMAIN)
+                ),
+                'default' => 'pain.008.003.02'
+            ),
+            'pain_format_refunds' => array(
+                'title' => __('PAIN file format for refunds', self::DOMAIN),
+                'type' => 'select',
+                'description' => __('The PAIN XML version to create. If you don\'t know what this is, leave unchanged.', self::DOMAIN),
+                'options' => array(
+                    'pain.001.002.03' => __('pain.001.002.03', self::DOMAIN),
+                    'pain.001.001.03' => __('pain.001.001.03', self::DOMAIN)
                 ),
                 'default' => 'pain.008.003.02'
             ),
@@ -999,6 +1263,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     public function setSepaMetaData($order_id, $accountHolder, $iban, $bic)
     {
         update_post_meta($order_id, self::SEPA_DD_EXPORTED, false);
+        update_post_meta($order_id, self::SEPA_REFUND_EXPORTED, false);
+        update_post_meta($order_id, self::SEPA_REFUND_OK_TO_EXPORT, false);
         update_post_meta($order_id, self::SEPA_DD_ACCOUNT_HOLDER, $accountHolder);
         update_post_meta($order_id, self::SEPA_DD_IBAN, $iban);
         update_post_meta($order_id, self::SEPA_DD_BIC, $bic);
@@ -1083,4 +1349,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             'redirect' => wc_get_endpoint_url( 'payment-methods' ),
         );
     }
+
+    public function process_refund( $order_id, $amount = null, $reason='' ) {
+        // Do your refund here. Refund $amount for the order with ID $order_id
+
+        $order = new WC_Order($order_id);
+        update_post_meta($order_id, self::SEPA_REFUND_OK_TO_EXPORT, true);
+
+        return true;
+      }
 }
