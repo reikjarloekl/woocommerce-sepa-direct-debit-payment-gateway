@@ -402,7 +402,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      */
     private static function output_orders_to_be_exported($orders) {
         ?>
-        <h1><?php esc_attr_e( 'Orders', self::DOMAIN ); ?></h1>
+        <h1><?php esc_attr_e( 'Direct Debit payments', self::DOMAIN ); ?></h1>
         <table class="widefat striped">
         <thead>
         <tr>
