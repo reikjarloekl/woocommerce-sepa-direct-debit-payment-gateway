@@ -477,7 +477,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $parent_info = self::get_refund_info($order->ID);
             $refund_info = wc_get_order( $order->ID );
             // if(sizeof( $refund_info->get_refunds() ) > 0 ) return;
-        
+            if($refund_info->get_total_refunded() > 0 ) {
+                update_post_meta($order->ID, self::SEPA_REFUND_OK_TO_EXPORT, true);
+            } else {
+                update_post_meta($order->ID, self::SEPA_REFUND_OK_TO_EXPORT, false);
+
+            }
 
             $is_from_parent = $parent_info['is_from_parent'];
             $shipping_name = get_post_meta($order->post_parent, self::SHIPPING_FIRST_NAME, true) . ' ' . get_post_meta($order->post_parent, self::SHIPPING_LAST_NAME, true);
@@ -822,70 +827,70 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
 
         // output the refunds
-        try {
+        $gateway = new WC_Gateway_SEPA_Direct_Debit();
+        if($gateway->settings['enabled_refunds'] === 'yes') { 
+            try {
 
-            $orderStatus = array_keys(wc_get_order_statuses());
-            
-            // do not export cancelled orders.
-            $key = array_search('wc-cancelled', $orderStatus);
-            unset($orderStatus[$key]);
+                $orderStatus = array_keys(wc_get_order_statuses());
+                
+                // do not export cancelled orders.
+                $key = array_search('wc-cancelled', $orderStatus);
+                unset($orderStatus[$key]);
 
-            $query_refunds = array(
-                'numberposts' => -1,
-                'post_type' => 'shop_order',
-                // 'post_status' => 'wc-refunded',
-                'post_status' => $orderStatus,
-                'meta_query' => array(
-                    array(
-                        'key' => self::PAYMENT_METHOD,
-                        'value' => 'sepa-direct-debit',
+                $query_refunds = array(
+                    'numberposts' => -1,
+                    'post_type' => 'shop_order',
+                    'post_status' => $orderStatus,
+                    'meta_query' => array(
+                        array(
+                            'key' => self::PAYMENT_METHOD,
+                            'value' => 'sepa-direct-debit',
+                        ),
+                        array(
+                            'key' => '_sepa_dd_exported',
+                            'value' => true,
+                        ),
+                        // array(
+                        //     'key' => '_refund_amount',
+                        //     'value' => 0,
+                        //     'compare' => '>',
+                        //     'type' => 'DECIMAL'
+                        // ),
+                        array(
+                            'key' => '_sepa_refund_ok_to_export',
+                            'value' => true,
+                        ),
+                        array(
+                            'key' => '_sepa_refund_exported',
+                            'value' => false,
+                        )
                     ),
-                    array(
-                        'key' => '_sepa_dd_exported',
-                        'value' => true,
-                    ),
-                    // array(
-                    //     'key' => '_sepa_refund_ok_to_export',
-                    //     'value' => true,
-                    // ),
-                    array(
-                        // 'key' => '_order_total',
-                        'key' => '_refund_amount',
-                        'value' => 0,
-                        'compare' => '>',
-                        'type'    => 'NUMERIC'
-                    ),
-                    array(
-                        'key' => '_sepa_refund_exported',
-                        'value' => false,
-                    )
-                ),
-            );
-            $to_be_exported_refund = get_posts($query_refunds);
-            
-                // print_r($to_be_exported_refund);
-            
-            $count = count($to_be_exported_refund);
+                );
+                $to_be_exported_refund = get_posts($query_refunds);
+                
+                    // print_r($to_be_exported_refund);
+                
+                $count = count($to_be_exported_refund);
 
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export_refunds'])) {
-                $filename = self::export_refund_xml($to_be_exported_refund);
-                foreach ($to_be_exported_refund as $order) {
-                    update_post_meta($order->ID, '_sepa_refund_exported', true);
-                }
-                echo '<div class="updated"><p>' . sprintf(__("Exported %d refunds to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
-            } else {
-                if ($to_be_exported_refund) {
-                    self::output_refunds_to_be_exported($to_be_exported_refund);
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export_refunds'])) {
+                    $filename = self::export_refund_xml($to_be_exported_refund);
+                    foreach ($to_be_exported_refund as $order) {
+                        update_post_meta($order->ID, '_sepa_refund_exported', true);
+                    }
+                    echo '<div class="updated"><p>' . sprintf(__("Exported %d refunds to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
                 } else {
-                    echo '<div class="notice"><p>' . __("No new refunds to export.", self::DOMAIN) . '</p></div>';
+                    if ($to_be_exported_refund) {
+                        self::output_refunds_to_be_exported($to_be_exported_refund);
+                    } else {
+                        echo '<div class="notice"><p>' . __("No new refunds to export.", self::DOMAIN) . '</p></div>';
+                    }
                 }
+                self::list_refund_xml_files();
+            } catch (Throwable $e) {
+                $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
+                echo "<div class=\"error notice\"><p>$msg</p></div>";
             }
-            self::list_refund_xml_files();
-        } catch (Throwable $e) {
-            $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
-            echo "<div class=\"error notice\"><p>$msg</p></div>";
         }
-
         
     }
 
@@ -958,6 +963,11 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 ),
                 'default' => 'pain.008.003.02'
             ),
+            'enabled_refunds' => array(
+                'title' => __('Enable/Disable refunds', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Enable the export of credit transfer files for refunds', self::DOMAIN),
+                'default' => 'no'),
             'pain_format_refunds' => array(
                 'title' => __('PAIN file format for refunds', self::DOMAIN),
                 'type' => 'select',
@@ -1350,12 +1360,20 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         );
     }
 
-    public function process_refund( $order_id, $amount = null, $reason='' ) {
-        // Do your refund here. Refund $amount for the order with ID $order_id
+    public function process_refund( $order_id, $amount = null, $reason = '' ) {
+        global $woocommerce;
+        // Refund $amount for the order with ID $order_id
 
-        $order = new WC_Order($order_id);
-        update_post_meta($order_id, self::SEPA_REFUND_OK_TO_EXPORT, true);
+        $order = wc_get_order($order_id);
 
+        if ( ! $order ) {
+			return false;
+        }
+        
+        // Create Params
+        $params = array();
+        $this->params["amount"] = $amount;
+        update_post_meta($order->ID, '_sepa_refund_ok_to_export', true);
         return true;
       }
 }
