@@ -809,6 +809,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 $filename = self::export_xml($to_be_exported);
                 foreach ($to_be_exported as $order) {
                     update_post_meta($order->ID, '_sepa_dd_exported', true);
+                    delete_post_meta($order->ID, '_sepa_refund_amount');
                 }
                 echo '<div class="updated"><p>' . sprintf(__("Exported %d payments to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
             } else {
@@ -850,20 +851,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                             'key' => '_sepa_dd_exported',
                             'value' => true,
                         ),
-                        // array(
-                        //     'key' => '_refund_amount',
-                        //     'value' => 0,
-                        //     'compare' => '>',
-                        //     'type' => 'DECIMAL'
-                        // ),
                         array(
-                            'key' => '_sepa_refund_ok_to_export',
-                            'value' => true,
+                            'key' => '_sepa_refund_amount',
+                            'value' => 0,
+                            'compare' => '>',
+                            'type' => 'DECIMAL'
                         ),
-                        array(
-                            'key' => '_sepa_refund_exported',
-                            'value' => false,
-                        )
                     ),
                 );
                 $to_be_exported_refund = get_posts($query_refunds);
@@ -876,6 +869,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                     $filename = self::export_refund_xml($to_be_exported_refund);
                     foreach ($to_be_exported_refund as $order) {
                         update_post_meta($order->ID, '_sepa_refund_exported', true);
+                        delete_post_meta($order->ID, '_sepa_refund_amount');
                     }
                     echo '<div class="updated"><p>' . sprintf(__("Exported %d refunds to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
                 } else {
@@ -1363,17 +1357,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     public function process_refund( $order_id, $amount = null, $reason = '' ) {
         global $woocommerce;
         // Refund $amount for the order with ID $order_id
-
-        $order = wc_get_order($order_id);
-
-        if ( ! $order ) {
-			return false;
-        }
-        
-        // Create Params
-        $params = array();
-        $this->params["amount"] = $amount;
-        update_post_meta($order->ID, '_sepa_refund_ok_to_export', true);
+        // Store refund amount in new post meta
+        update_post_meta($order_id, '_sepa_refund_amount', $amount);
         return true;
       }
 }
