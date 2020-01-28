@@ -27,7 +27,9 @@ use Digitick\Sepa\DomBuilder\CustomerDirectDebitTransferDomBuilder;
 use Digitick\Sepa\Exception\InvalidTransferFileConfiguration;
 use Digitick\Sepa\GroupHeader;
 use Digitick\Sepa\PaymentInformation;
+use Digitick\Sepa\TransferFile\CustomerCreditTransferFile;
 use Digitick\Sepa\TransferFile\CustomerDirectDebitTransferFile;
+use Digitick\Sepa\TransferInformation\CustomerCreditTransferInformation;
 use Digitick\Sepa\TransferInformation\CustomerDirectDebitTransferInformation;
 
 require_once("sepa-checks.php");
@@ -695,7 +697,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function export_refund_xml($orders) {
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
         $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
-        $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
+        $sepaFile = new CustomerCreditTransferFile($groupHeader);
         $painFormatRefunds = 'pain.001.002.03';
         if (array_key_exists('pain_format_refunds', $gateway->settings)) {
             $painFormatRefunds = $gateway->settings['pain_format_refunds'];
@@ -714,11 +716,9 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $payment_info = self::get_refund_info($order);
             $parts = preg_split('/\./', $payment_info['total']);
             $amount = strval($parts[0]) * 100 + strval($parts[1]);
-            $transfer = new CustomerDirectDebitTransferInformation($amount, $payment_info['iban'], $payment_info['account_holder']);
+            $transfer = new CustomerCreditTransferInformation($amount, $payment_info['iban'], $payment_info['account_holder']);
             if ($payment_info['bic'])
                 $transfer->setBic($payment_info['bic']);
-            $transfer->setMandateSignDate(new \DateTime($order->post_date));
-            $transfer->setMandateId($order->ID);
             $remittance_info = "";
             if (array_key_exists('remittance_info', $gateway->settings)) {
                 $remittance_info = $gateway->settings['remittance_info'] . " ";
@@ -744,7 +744,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $payment->setSequenceType($sequence);
             $sepaFile->addPaymentInformation($payment);
         }
-        $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormatRefunds);
+        $domBuilder = new CustomerCreditTransferDomBuilder($painFormatRefunds);
         $sepaFile->accept($domBuilder);
         $xml = $domBuilder->asXml();
         $now = new DateTime();
