@@ -332,23 +332,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * @return string The full output path.
      * @throws Exception in case, output path could not be created.
      */
-    private static function get_xml_path() {
+    private static function get_xml_path($type) {
         $upload_dir = wp_upload_dir();
-        $target_dir = $upload_dir['basedir'] . '/' . self::get_xml_dir();
+        if ($type == 'order') {
+            $target_dir = $upload_dir['basedir'] . '/' . self::get_xml_dir();
+        } elseif ($type == 'refund') {
+            $target_dir = $upload_dir['basedir'] . '/' . self::get_refund_xml_dir();
+        }
         if (false === wp_mkdir_p( $target_dir )) {
             throw new Exception(sprintf(__('Could not create output path %s', self::DOMAIN), $target_dir));
         }
         return $target_dir;
     }
 
-    private static function get_refund_xml_path() {
-        $upload_dir = wp_upload_dir();
-        $target_dir = $upload_dir['basedir'] . '/' . self::get_refund_xml_dir();
-        if (false === wp_mkdir_p( $target_dir )) {
-            throw new Exception(sprintf(__('Could not create output path %s', self::DOMAIN), $target_dir));
-        }
-        return $target_dir;
-    }
 
     /**
      * Get payment info from post.
@@ -545,36 +541,34 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     /**
      * Scan output path and list all SEPA-XML-files previously generated.
      */
-    private static function list_xml_files() {
+    private static function list_xml_files($type) {
         $upload_dir = wp_upload_dir();
         $base_url = $upload_dir['baseurl'];
-        $ffs = self::sorted_dir(self::get_xml_path());
-        if (empty($ffs)) return;
-        echo '<h3>'. __("SEPA Orders XML-Files", self::DOMAIN) . '</h3>';
-        echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
-        echo '<ul>';
-        foreach($ffs as $ff){
-            echo '<li><a href="' . $base_url .'/' . self::get_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
-            echo '</li>';
+        $ffs = self::sorted_dir(self::get_xml_path($type));
+        
+        if ($type == 'order') {
+            if (empty($ffs)) return;
+            echo '<h3>'. __("SEPA Orders XML-Files", self::DOMAIN) . '</h3>';
+            echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
+            echo '<ul>';
+            foreach($ffs as $ff){
+                echo '<li><a href="' . $base_url .'/' . self::get_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
+                echo '</li>';
+            }
+            echo '</ul>';
+
+        } elseif ($type == 'refund') {
+            if (empty($ffs)) return;
+            echo '<h3>'. __("SEPA Refunds XML-Files", self::DOMAIN) . '</h3>';
+            echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
+            echo '<ul>';
+            foreach($ffs as $ff){
+                echo '<li><a href="' . $base_url .'/' . self::get_refund_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
+                echo '</li>';
+            }
+            echo '</ul>';
         }
-        echo '</ul>';
-    }
-    /**
-     * Scan output path and list all SEPA-XML-files previously generated.
-     */
-    private static function list_refund_xml_files() {
-        $upload_dir = wp_upload_dir();
-        $base_url = $upload_dir['baseurl'];
-        $ffs = self::sorted_dir(self::get_refund_xml_path());
-        if (empty($ffs)) return;
-        echo '<h3>'. __("SEPA Refunds XML-Files", self::DOMAIN) . '</h3>';
-        echo '<div class="ui-state-highlight"><p>'. __("Please use right-click and 'save-link-as' to download the XML-files.", self::DOMAIN) . '</p></div>';
-        echo '<ul>';
-        foreach($ffs as $ff){
-            echo '<li><a href="' . $base_url .'/' . self::get_refund_xml_dir() . '/' .$ff . '" target="_blank">'. $ff . '</a>';
-            echo '</li>';
-        }
-        echo '</ul>';
+        
     }
 
     /**
@@ -687,7 +681,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $xml = $domBuilder->asXml();
         $now = new DateTime();
         $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
-        if (false === file_put_contents(self::get_xml_path() . "/" . $filename, $xml)) {
+        if (false === file_put_contents(self::get_xml_path('order') . "/" . $filename, $xml)) {
             throw new Exception(sprintf(__('Could not create output file %s', self::DOMAIN), $filename));
         }
         return $filename;
@@ -749,7 +743,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $xml = $domBuilder->asXml();
         $now = new DateTime();
         $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-Refund-'. $orders[0]->ID . '.xml';
-        if (false === file_put_contents(self::get_refund_xml_path() . "/" . $filename, $xml)) {
+        if (false === file_put_contents(self::get_xml_path('refund') . "/" . $filename, $xml)) {
             throw new Exception(sprintf(__('Could not create output file %s', self::DOMAIN), $filename));
         }
         return $filename;
@@ -819,7 +813,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                     echo '<div class="notice"><p>' . __("No new payments to export.", self::DOMAIN) . '</p></div>';
                 }
             }
-            self::list_xml_files();
+            self::list_xml_files('order');
         } catch (Throwable $e) {
             $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
             echo "<div class=\"error notice\"><p>$msg</p></div>";
@@ -879,7 +873,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                         echo '<div class="notice"><p>' . __("No new refunds to export.", self::DOMAIN) . '</p></div>';
                     }
                 }
-                self::list_refund_xml_files();
+                self::list_xml_files('refund');
             } catch (Throwable $e) {
                 $msg = "Exception: ". $e->getMessage() . " (Code: " . $e->getCode() . ")";
                 echo "<div class=\"error notice\"><p>$msg</p></div>";
