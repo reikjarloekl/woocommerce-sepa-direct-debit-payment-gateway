@@ -853,8 +853,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'select',
                 'description' => __('The PAIN XML version to create. If you don\'t know what this is, leave unchanged.', self::DOMAIN),
                 'options' => array(
-                    'pain.001.001.03' => __('pain.001.001.03', self::DOMAIN)
-                    'pain.001.002.03' => __('pain.001.002.03', self::DOMAIN),
+                    'pain.001.001.03' => __('pain.001.001.03', self::DOMAIN),
+                    'pain.001.002.03' => __('pain.001.002.03', self::DOMAIN)
                 ),
                 'default' => 'pain.001.001.03'
             ),
