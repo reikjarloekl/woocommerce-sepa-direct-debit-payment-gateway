@@ -615,7 +615,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 if ($sequence === '') $sequence = $sequence_for_this_order;
                 if ($sequence !== $sequence_for_this_order) $sequence = PaymentInformation::S_ONEOFF; 
             } else {
-                $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormat);
+                $payment = self::get_sepa_payment_info($order->ID, self::get_sequence_for_order($order->ID), $painFormat, $is_refunds);
             }
             $transfer = apply_filters('wc_gateway_sepa_direct_debit:export_xml:transfer', $transfer, $order);
             $payment->addTransfer($transfer);
