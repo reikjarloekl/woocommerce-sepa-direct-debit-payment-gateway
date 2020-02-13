@@ -508,19 +508,22 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      * @param $id ID to use for the payment info structure.
      * @param $sequence Sequence code to set for the payment info structure.
      * @param $painFormat The output format of the XML to be created.
+     * @param $is_refunds If true, this is for a refunds file - so do not fill direct debit
      * @return string The new SEPA direct debit payment info object filled according to the plugin settings.
      */
-    private static function get_sepa_payment_info($id, $sequence, $painFormat) {
+    private static function get_sepa_payment_info($id, $sequence, $painFormat, $is_refunds) {
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
         $iban = strtoupper($gateway->settings['target_iban']);
         $bic = strtoupper($gateway->settings['target_bic']);
         $payment = new PaymentInformation($id, $iban, $bic, $gateway->settings['target_account_holder']);
         $payment->setSequenceType($sequence);
         $payment->setDueDate(new \DateTime('tomorrow'));
-        $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
-        // COR1 no longer supported in pain.008.001.02
-        $cor1_enabled = ($gateway->settings['export_as_COR1'] === 'yes') && ($painFormat != 'pain.008.001.02');
-        $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
+        if (!$is_refunds) {
+            $payment->setCreditorId(strtoupper($gateway->settings['creditor_id']));
+            // COR1 no longer supported in pain.008.001.02
+            $cor1_enabled = ($gateway->settings['export_as_COR1'] === 'yes') && ($painFormat != 'pain.008.001.02');
+            $payment->setLocalInstrumentCode($cor1_enabled ? 'COR1' : 'CORE');
+        }
         $payment = apply_filters('wc_gateway_sepa_direct_debit:get_sepa_payment_info', $payment, $id, $sequence, $painFormat);
         return $payment;
     }
@@ -558,18 +561,19 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     private static function export_xml($orders, $type) {
         $gateway = new WC_Gateway_SEPA_Direct_Debit();
         $groupHeader = new GroupHeader($gateway->settings['target_bic'] . $orders[0]->ID, $gateway->settings['target_account_holder']);
-        
-        if ($type == 'order') {
+        $is_refunds = ($type == 'refund');
+
+        if ($is_refunds) {
+            $sepaFile = new CustomerCreditTransferFile($groupHeader);
+            $painFormat = 'pain.001.001.03';
+            if (array_key_exists('pain_format_refunds', $gateway->settings)) {
+                $painFormat = $gateway->settings['pain_format_refunds'];
+            }
+        } else {
             $sepaFile = new CustomerDirectDebitTransferFile($groupHeader);
             $painFormat = 'pain.008.003.02';
             if (array_key_exists('pain_format', $gateway->settings)) {
                 $painFormat = $gateway->settings['pain_format'];
-            }
-        } elseif ($type == 'refund') {
-            $sepaFile = new CustomerCreditTransferFile($groupHeader);
-            $painFormat = 'pain.001.002.03';
-            if (array_key_exists('pain_format_refunds', $gateway->settings)) {
-                $painFormat = $gateway->settings['pain_format_refunds'];
             }
         }
 
@@ -581,7 +585,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         $sequence = '';
 
         if ($singlePaymentInfo) {
-            $payment = self::get_sepa_payment_info("paymentInfo", PaymentInformation::S_ONEOFF, $painFormat);
+            $payment = self::get_sepa_payment_info("paymentInfo", PaymentInformation::S_ONEOFF, $painFormat, $is_refunds);
         }
         foreach($orders as &$order) {
             $payment_info = self::get_payment_info($order, $type);
@@ -620,23 +624,20 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             }
         }
         if ($singlePaymentInfo) {
-            $payment->setSequenceType($sequence);
+            if (!$is_refunds) $payment->setSequenceType($sequence);
             $sepaFile->addPaymentInformation($payment);
         }
 
-        if ($type == 'order') {
-            $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
-        } elseif ($type == 'refund') {
+        $now = new DateTime();
+        if ($is_refunds) {
             $domBuilder = new CustomerCreditTransferDomBuilder($painFormat);
+            $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-Refund-'. $orders[0]->ID . '.xml';
+        } elseif ($type == 'refund') {
+            $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
+            $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
         }
         $sepaFile->accept($domBuilder);
         $xml = $domBuilder->asXml();
-        $now = new DateTime();
-        if ($type == 'order') {
-            $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
-        } elseif ($type == 'refund') {
-            $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-Refund-'. $orders[0]->ID . '.xml';
-        }
         if (false === file_put_contents(self::get_xml_path($type) . "/" . $filename, $xml)) {
             throw new Exception(sprintf(__('Could not create output file %s', self::DOMAIN), $filename));
         }
@@ -852,10 +853,10 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'type' => 'select',
                 'description' => __('The PAIN XML version to create. If you don\'t know what this is, leave unchanged.', self::DOMAIN),
                 'options' => array(
-                    'pain.001.002.03' => __('pain.001.002.03', self::DOMAIN),
                     'pain.001.001.03' => __('pain.001.001.03', self::DOMAIN)
+                    'pain.001.002.03' => __('pain.001.002.03', self::DOMAIN),
                 ),
-                'default' => 'pain.008.003.02'
+                'default' => 'pain.001.001.03'
             ),
             'export_as_COR1' => array(
                 'title' => __('Export payments as express debits (COR1)', self::DOMAIN),
