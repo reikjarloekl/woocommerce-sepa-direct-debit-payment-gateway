@@ -359,7 +359,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         if ($type == 'order') {
             $result['total'] = wc_format_decimal( $order->get_total() - $order->get_total_refunded(), wc_get_price_decimals() ); 
         } elseif ($type == 'refund') {
-            $result['total'] = wc_format_decimal( $order->get_total_refunded(), wc_get_price_decimals() );
+            $refunds = get_post_meta($post, self::SEPA_REFUND_AMOUNT, true);
+            $result['total'] = wc_format_decimal( floatval($refunds), wc_get_price_decimals() );
         }
 
         $result['account_holder'] = get_post_meta($post, self::SEPA_DD_ACCOUNT_HOLDER, true);
@@ -1241,7 +1242,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
     public function process_refund( $order_id, $amount = null, $reason = '' ) {
         global $woocommerce;
         // Refund $amount for the order with ID $order_id
-        // Store refund amount in new post meta
+        // Store refund amount in new post meta, add if previous refunds have occured
+        $previous_refunds = get_post_meta(order_id, self::SEPA_REFUND_AMOUNT, true);
+        if (!empty($previous_refunds)) {
+            $previous_value = floatval($previous_refunds);
+            $amount += $previous_value;
+        }
         update_post_meta($order_id, self::SEPA_REFUND_AMOUNT, $amount);
         return true;
       }
