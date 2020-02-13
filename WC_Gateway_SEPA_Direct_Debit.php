@@ -1243,7 +1243,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         global $woocommerce;
         // Refund $amount for the order with ID $order_id
         // Store refund amount in new post meta, add if previous refunds have occured
-        $previous_refunds = get_post_meta(order_id, self::SEPA_DD_REFUND_AMOUNT, true);
+        $previous_refunds = get_post_meta($order_id, self::SEPA_DD_REFUND_AMOUNT, true);
         if (!empty($previous_refunds)) {
             $previous_value = floatval($previous_refunds);
             $amount += $previous_value;
