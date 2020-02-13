@@ -741,9 +741,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                         ),
                         array(
                             'key' => self::SEPA_DD_REFUND_AMOUNT,
-                            'value' => 0,
-                            'compare' => '>',
-                            'type' => 'DECIMAL'
+                            'compare' => 'EXISTS',
                         ),
                     ),
                 );
