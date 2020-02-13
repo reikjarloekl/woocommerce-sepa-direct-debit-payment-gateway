@@ -42,7 +42,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 {
     const GATEWAY_ID = 'sepa-direct-debit';
     const SEPA_DD_EXPORTED = '_sepa_dd_exported';
-    const SEPA_REFUND_AMOUNT = '_sepa_dd_refund_amount';
+    const SEPA_DD_REFUND_AMOUNT = '_sepa_dd_refund_amount';
     const SEPA_DD_ACCOUNT_HOLDER = '_sepa_dd_account_holder';
     const SEPA_DD_IBAN = '_sepa_dd_iban';
     const SEPA_DD_BIC = '_sepa_dd_bic';
@@ -359,7 +359,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         if ($type == 'order') {
             $result['total'] = wc_format_decimal( $order->get_total() - $order->get_total_refunded(), wc_get_price_decimals() ); 
         } elseif ($type == 'refund') {
-            $refunds = get_post_meta($post, self::SEPA_REFUND_AMOUNT, true);
+            $refunds = get_post_meta($post, self::SEPA_DD_REFUND_AMOUNT, true);
             $result['total'] = wc_format_decimal( floatval($refunds), wc_get_price_decimals() );
         }
 
@@ -697,7 +697,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 $filename = self::export_xml($to_be_exported, 'order');
                 foreach ($to_be_exported as $order) {
                     update_post_meta($order->ID, self::SEPA_DD_EXPORTED, true);
-                    delete_post_meta($order->ID, self::SEPA_REFUND_AMOUNT);
+                    delete_post_meta($order->ID, self::SEPA_DD_REFUND_AMOUNT);
                 }
                 echo '<div class="updated"><p>' . sprintf(__("Exported %d payments to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
             } else {
@@ -740,7 +740,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                             'value' => true,
                         ),
                         array(
-                            'key' => self::SEPA_REFUND_AMOUNT,
+                            'key' => self::SEPA_DD_REFUND_AMOUNT,
                             'value' => 0,
                             'compare' => '>',
                             'type' => 'DECIMAL'
@@ -756,7 +756,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['export_refunds'])) {
                     $filename = self::export_xml($to_be_exported_refund, 'refund');
                     foreach ($to_be_exported_refund as $order) {
-                        delete_post_meta($order->ID, self::SEPA_REFUND_AMOUNT);
+                        delete_post_meta($order->ID, self::SEPA_DD_REFUND_AMOUNT);
                     }
                     echo '<div class="updated"><p>' . sprintf(__("Exported %d refunds to new SEPA XML: %s", self::DOMAIN), $count, $filename) . '</p></div>';
                 } else {
@@ -1243,12 +1243,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         global $woocommerce;
         // Refund $amount for the order with ID $order_id
         // Store refund amount in new post meta, add if previous refunds have occured
-        $previous_refunds = get_post_meta(order_id, self::SEPA_REFUND_AMOUNT, true);
+        $previous_refunds = get_post_meta(order_id, self::SEPA_DD_REFUND_AMOUNT, true);
         if (!empty($previous_refunds)) {
             $previous_value = floatval($previous_refunds);
             $amount += $previous_value;
         }
-        update_post_meta($order_id, self::SEPA_REFUND_AMOUNT, $amount);
+        update_post_meta($order_id, self::SEPA_DD_REFUND_AMOUNT, $amount);
         return true;
       }
 }
