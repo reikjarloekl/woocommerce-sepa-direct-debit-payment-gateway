@@ -383,7 +383,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
      */
     public static function output_submit_button($name, $label, $disabled) {
         $name_or_disabled = $disabled ? "disabled" : "name=" . $name;
-        echo '<p class="submit"><input class="button-primary" type="submit" ' . $name_or_disabled . ' value="' . __($label, self::DOMAIN) . '"></p>'
+        echo '<p class="submit"><input class="button-primary" type="submit" ' . $name_or_disabled . ' value="' . __($label, self::DOMAIN) . '"></p>';
     }
 
 
