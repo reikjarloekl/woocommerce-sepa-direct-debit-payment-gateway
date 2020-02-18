@@ -632,7 +632,7 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         if ($is_refunds) {
             $domBuilder = new CustomerCreditTransferDomBuilder($painFormat);
             $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-Refund-'. $orders[0]->ID . '.xml';
-        } elseif ($type == 'refund') {
+        } else {
             $domBuilder = new CustomerDirectDebitTransferDomBuilder($painFormat);
             $filename = $now->format('Y-m-d-H-i-s') . '-SEPA-DD-'. $orders[0]->ID . '.xml';
         }
