@@ -1,0 +1,12 @@
+{
+    "fsdeploy.nodes": [
+        {
+            "source":"c:/work/bungartz.pm/sepa-direct-debit/",
+            "target":"c:/work/bungartz.pm/VVV/www/wordpress-one/public_html/wp-content/plugins/sepa-direct-debit/",
+            "include":"**/*.*",
+            "exclude":"**/assets/*.*",
+        }
+    ],
+    "fsdeploy.deployOnSave": true,
+    "fsdeploy.deployWorkspaceOnSave": true
+}

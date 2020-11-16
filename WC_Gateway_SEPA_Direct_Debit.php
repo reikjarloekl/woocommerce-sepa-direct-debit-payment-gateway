@@ -594,9 +594,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
         try {
 
             $orderStatus = array_keys(wc_get_order_statuses());
-            // do not export cancelled orders.
+            // do not export cancelled and pending orders.
             $key = array_search('wc-cancelled', $orderStatus);
             unset($orderStatus[$key]);
+            $key = array_search('wc-pending', $orderStatus);
+            unset($orderStatus[$key]);
+
             $query = array(
                 'numberposts' => -1,
                 'post_type' => 'shop_order',
@@ -728,6 +731,12 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
                 'label' => __('Check this to set the order status to "Processing" immediately. Use this option if you want to start processing the order and trust the direct debit to be fulfilled later. The payment does not need to be entered manually in this case after the money has been transferred.', self::DOMAIN),
                 'default' => 'no'
             ),
+            'keep_in_pending' => array(
+                'title' => __('Keep order status in "Pending"', self::DOMAIN),
+                'type' => 'checkbox',
+                'label' => __('Check this to keep the order status in "Pending". Use this option if you do not want the payment to be exported to SEPA-XML immediately. This can be useful in case you need to wait for a signed mandate or similar from the customer.', self::DOMAIN),
+                'default' => 'no'
+            )            
         );
     }
 
@@ -822,15 +831,27 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $order->payment_complete();
             $order->add_order_note( __('Automatically marking payment complete due to payment gateway settings.', self::DOMAIN) );
 
-        } if ($is_change_payment) {
+        } 
+        
+        $keep_in_pending = false;
+        if ($is_change_payment) {
             $order->payment_complete();
             $order->add_order_note( __('Automatically marking payment complete due to payment change by customer.', self::DOMAIN) );
         } else {
-            // Mark as on-hold (we're awaiting the Direct Debit)
-            $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
-
-            // Reduce stock levels
-            $order->reduce_order_stock();
+ 
+            if (isset($this->settings['keep_in_pending'])) {
+                $keep_in_pending = ($this->settings['keep_in_pending'] === 'yes');    
+            }
+                
+            if ($keep_in_pending) {
+                $order->add_order_note( __('Keeping order marked as pending due to settings in gateway configuration.', self::DOMAIN) );                
+            } else {
+                // Mark as on-hold (we're awaiting the Direct Debit)
+                $order->update_status('on-hold', __('Awaiting SEPA direct debit completion.', self::DOMAIN));
+            
+                // Reduce stock levels
+                $order->reduce_order_stock();
+            }
         }
 
         // Remove cart
