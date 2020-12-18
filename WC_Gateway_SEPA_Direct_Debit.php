@@ -817,6 +817,13 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
 
         $this->setSepaMetaData($order_id, $accountHolder, $iban, $bic);
 
+        if (round($order->get_total(), 2) === 0.00) {
+            // mark orders with a total of 0 as exported (because they will not be exported).
+            // Some subscriptions plugins cause a "FRST" payment with a total of 0 to go through process_payment.
+            $order->add_order_note( __('Not exporting payment for this order as the total is 0.', self::DOMAIN) );
+            update_post_meta($order->ID, '_sepa_dd_exported', true);
+        }
+
         if (function_exists('wcs_get_subscriptions_for_order')) {
             foreach (wcs_get_subscriptions_for_order($order_id, array('order_type' => 'any')) as $subscription) {
                 $this->setSepaMetaData($subscription->id, $accountHolder, $iban, $bic);
@@ -1071,6 +1078,8 @@ class WC_Gateway_SEPA_Direct_Debit extends WC_Payment_Gateway
             $iban = get_post_meta( $order->get_id(), self::SEPA_DD_IBAN, true );
             $bic = get_post_meta( $order->get_id(), self::SEPA_DD_BIC, true );
             $account_holder = get_post_meta( $order->get_id(), self::SEPA_DD_ACCOUNT_HOLDER, true );
+
+            if (empty($account_holder)) return;
 
             if ( $is_plain_text ) {
                 echo __( 'PAYMENT INFORMATION', self::DOMAIN ) . "\n";
